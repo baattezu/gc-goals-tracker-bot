@@ -7,6 +7,7 @@ import org.baattezu.telegrambotdemo.bot.input.UserInputHandlerWithoutDate;
 import org.baattezu.telegrambotdemo.data.CallbackType;
 import org.baattezu.telegrambotdemo.data.UserGoalData;
 import org.baattezu.telegrambotdemo.data.UserState;
+import org.baattezu.telegrambotdemo.service.ChatService;
 import org.baattezu.telegrambotdemo.service.GoalService;
 import org.baattezu.telegrambotdemo.utils.JsonHandler;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
@@ -29,38 +30,31 @@ public class GoalBot extends TelegramLongPollingBot {
     private String botUsername;
 
     private final GoalService goalService;
+    private final ChatService chatService;
     private final CommandsHandler commandsHandler;
     private final CallbacksHandler callbacksHandler;
     private final UserInputHandlerWithoutDate inputHandler;
-
     @Override
     public void onUpdateReceived(Update update) {
-        // Проверка на добавление новых участников в группу
-        if (update.hasMessage() && update.getMessage().hasText()) {
-            handleMessage(update);
-        }
-
-        else if (update.getMessage() != null && update.getMessage().getNewChatMembers() != null) {
-            handleNewChatMembers(update);
+        // Проверка на наличие сообщения
+        if (update.hasMessage()) {
+            // Проверка на текстовое сообщение
+            if (update.getMessage().hasText()) {
+                handleMessage(update);
+            }
+            // Проверка на групповое сообщение и добавление чата в базу
+            else if (update.getMessage().getChat().isGroupChat() &&
+                    !chatService.isChatExists(update.getMessage().getChat().getId())) {
+                handleAddingToGroupChat(update);
+            }
         }
         // Обработка коллбэков
         else if (update.hasCallbackQuery()) {
             handleCallbackQuery(update);
         }
-        // Обработка текстовых сообщений
     }
 
-    private void sendWelcomeMessage(Long chatId) {
-        String welcomeMessage = "Привет! Я бот для ваших целей и задач. Чтобы зарегистрироваться, введи команду /register [Твое Имя].";
-        SendMessage message = new SendMessage();
-        message.setChatId(chatId.toString());
-        message.setText(welcomeMessage);
-        try {
-            execute(message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+
     private void sendMessage(Object object) {
         try {
             if (object instanceof SendMessage sendMessage){
@@ -74,17 +68,19 @@ public class GoalBot extends TelegramLongPollingBot {
     }
 
     // Метод для обработки новых участников в группе
-    private void handleNewChatMembers(Update update) {
-        for (User newUser : update.getMessage().getNewChatMembers()) {
-            // Если добавлен бот, отправляем приветственное сообщение
-            if (newUser.getUserName().equals(botUsername)) {
-                log.info("salam alaykum");
-                sendWelcomeMessage(update.getMessage().getChatId());
-            }
-        }
+    private void handleAddingToGroupChat(Update update){
+        var chatId = update.getMessage().getChatId();
+        var chatName = update.getMessage().getChat().getTitle();
 
-        // Обработка команды, если это сообщение команда
-        sendMessage(commandsHandler.handleCommand(update));
+        String welcomeMessage =
+                "Привет! Я бот для ваших целей и задач. " +
+                        "Чтобы зарегистрироваться, введи команду /рег [Твое Имя].";
+        SendMessage message = new SendMessage();
+        message.setChatId(String.valueOf(chatId));
+        message.setText(welcomeMessage);
+
+        chatService.createGroupChat(chatId, chatName);
+        sendMessage(message);
     }
 
     // Метод для обработки коллбэков

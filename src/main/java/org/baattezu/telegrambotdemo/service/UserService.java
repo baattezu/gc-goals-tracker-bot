@@ -2,6 +2,7 @@ package org.baattezu.telegrambotdemo.service;
 
 import lombok.RequiredArgsConstructor;
 import org.baattezu.telegrambotdemo.data.UserState;
+import org.baattezu.telegrambotdemo.model.Chat;
 import org.baattezu.telegrambotdemo.model.User;
 import org.baattezu.telegrambotdemo.repository.UserRepository;
 import org.springframework.stereotype.Service;
@@ -26,19 +27,22 @@ public class UserService {
             User newUser = new User();
             newUser.setId(userId);
             newUser.setUsername(username);
-            newUser.setChatId(99999L);
+            newUser.setChat(null);
             return newUser;
         });
         user.setUsername(name); // Сохраняем имя пользователя
         return userRepository.save(user);
     }
-
+    public User pinToChat(User user, Chat chat){
+        user.setChat(chat);
+        return userRepository.save(user);
+    }
     public User findById(Long userId) {
         return userRepository.findById(userId).orElse(null);
     }
 
 
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public List<User> getAllUsersFromGroupChat(Chat chat) {
+        return userRepository.findAllByChat(chat);
     }
 }

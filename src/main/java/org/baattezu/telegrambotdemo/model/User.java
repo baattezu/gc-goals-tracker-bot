@@ -11,7 +11,6 @@ public class User {
     @Id
     private Long id;
     private String username;
-    private Long chatId;  // Telegram Chat ID
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "chat_id")
