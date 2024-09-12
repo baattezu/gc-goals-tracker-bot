@@ -19,13 +19,17 @@ public class CommandsHandler {
             RegisterCommand registerCommand,
             CheckInCommand checkInCommand,
             SetGoalCommand setGoalCommand,
-            GetMyGoalsCommand getMyGoalsCommand
+            GetMyGoalsCommand getMyGoalsCommand,
+            PinToChatCommand pinToChatCommand,
+            GetAllUsersFromThisChatCommand getAllUsersFromThisChatCommand
     ) {
         this.commands = Map.of(
-                "/register", registerCommand,
-                "/checkin", checkInCommand,
-                "/setgoal", setGoalCommand,
-                "/getgoals", getMyGoalsCommand
+                "/рег", registerCommand,
+                "/отметиться", checkInCommand,
+                "/поставитьцель", setGoalCommand,
+                "/моицели", getMyGoalsCommand,
+                "/прикрепитьсякчату", pinToChatCommand,
+                "/все", getAllUsersFromThisChatCommand
         );
     }
 

@@ -22,42 +22,42 @@ public class ResultGenerator {
     private final GoalService goalService;
     private final UserService userService;
 
-    public void generateResult() throws IOException {
-        // Данные таблицы
-        var chatId =
-        String[][] data = {
-                {"Имя", "Цели", "Результат"}
-        };
-
-
-        String[] columns = {"Имя", "Цели", "Результат"};
-
-        // Создаем JTable
-        JTable table = new JTable(data, columns);
-
-        // Применяем кастомный рендерер для ячеек с переносом текста
-        customizeTable(table);
-
-        // Устанавливаем размер таблицы для рендеринга
-        table.setSize(table.getPreferredSize());
-
-        // Создаем изображение
-        BufferedImage image = new BufferedImage(table.getWidth(), table.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = image.createGraphics();
-
-        // Устанавливаем фон
-        g2d.setColor(Color.BLACK);
-        g2d.fillRect(0, 0, table.getWidth(), table.getHeight());
-
-        // Рендерим таблицу на изображение
-        table.print(g2d);
-        g2d.dispose();
-
-        // Сохраняем изображение
-        ImageIO.write(image, "png", new File("table_image.png"));
-
-        System.out.println("Изображение таблицы сохранено как table_image.png");
-    }
+//    public void generateResult() throws IOException {
+//        // Данные таблицы
+//        var chatId =
+//        String[][] data = {
+//                {"Имя", "Цели", "Результат"}
+//        };
+//
+//
+//        String[] columns = {"Имя", "Цели", "Результат"};
+//
+//        // Создаем JTable
+//        JTable table = new JTable(data, columns);
+//
+//        // Применяем кастомный рендерер для ячеек с переносом текста
+//        customizeTable(table);
+//
+//        // Устанавливаем размер таблицы для рендеринга
+//        table.setSize(table.getPreferredSize());
+//
+//        // Создаем изображение
+//        BufferedImage image = new BufferedImage(table.getWidth(), table.getHeight(), BufferedImage.TYPE_INT_ARGB);
+//        Graphics2D g2d = image.createGraphics();
+//
+//        // Устанавливаем фон
+//        g2d.setColor(Color.BLACK);
+//        g2d.fillRect(0, 0, table.getWidth(), table.getHeight());
+//
+//        // Рендерим таблицу на изображение
+//        table.print(g2d);
+//        g2d.dispose();
+//
+//        // Сохраняем изображение
+//        ImageIO.write(image, "png", new File("table_image.png"));
+//
+//        System.out.println("Изображение таблицы сохранено как table_image.png");
+//    }
 
     // Метод для кастомизации таблицы
     private static void customizeTable(JTable table) {
