@@ -1,11 +1,13 @@
-package org.baattezu.telegrambotdemo.bot.commands;
+package org.baattezu.telegrambotdemo.bot.commands.usersrelated;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.baattezu.telegrambotdemo.bot.commands.Command;
 import org.baattezu.telegrambotdemo.model.CheckIn;
 import org.baattezu.telegrambotdemo.model.User;
 import org.baattezu.telegrambotdemo.service.CheckInService;
 import org.baattezu.telegrambotdemo.service.UserService;
+import org.baattezu.telegrambotdemo.utils.BotMessagesEnum;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -21,16 +23,22 @@ public class CheckInCommand implements Command {
 
     @Override
     public SendMessage execute(Update update) {
-        Long chatId = update.getMessage().getChatId();
-        Long userId = update.getMessage().getFrom().getId();
+        var chatId = update.getMessage().getChatId();
+        var userId = update.getMessage().getFrom().getId();
+
+        var message = new SendMessage();
+        message.setChatId(chatId);
 
         User user = userService.findById(userId);
+
         if (user == null) {
-            return new SendMessage(String.valueOf(chatId), "Пожалуйста, зарегистрируйтесь через /register перед тем, как отмечаться.");
+            message.setText(BotMessagesEnum.REGISTER_BEFORE_CHECKIN_MESSAGE.getMessage());
+            return message;
         }
 
         CheckIn checkIn = checkInService.checkInUser(user);
 
-        return new SendMessage(String.valueOf(chatId), "Отметка успешна! Время отметки: " + checkIn.getCheckInTime());
+        message.setText(BotMessagesEnum.CHECKIN_MESSAGE.getMessage(checkIn.getCheckInTime()));
+        return message;
     }
 }

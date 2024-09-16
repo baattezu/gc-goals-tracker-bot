@@ -1,4 +1,4 @@
-package org.baattezu.telegrambotdemo.bot.callbacks.view_and_edit_goals;
+package org.baattezu.telegrambotdemo.bot.callbacks.goal;
 
 
 import jakarta.persistence.Cache;
@@ -10,7 +10,9 @@ import org.baattezu.telegrambotdemo.data.CallbackType;
 import org.baattezu.telegrambotdemo.model.Goal;
 import org.baattezu.telegrambotdemo.service.GoalService;
 import org.baattezu.telegrambotdemo.service.UserService;
+import org.baattezu.telegrambotdemo.utils.BotMessagesEnum;
 import org.baattezu.telegrambotdemo.utils.JsonHandler;
+import org.baattezu.telegrambotdemo.utils.TelegramBotHelper;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
@@ -44,44 +46,21 @@ public class CompleteGoalCallback implements CallbackHandler {
         var user = userService.findById(userId);
         goalService.changeGoalCompletion(completedGoal);
         // Формируем новый текст сообщения
-        var myGoals = goalService.getAllGoals(user);
+        var myGoals = goalService.getAllGoals(user.getId(), false);
 
-        String response = "✨ *Мои цели на эту неделю:* \n \n";
-        int index = 1;
-        var formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-
-        myGoals.sort(Comparator
-                .comparing(Goal::getCreatedAt)              // Сначала по дате
-                .thenComparing(Goal::getCompleted));
-
-
+        var response = new StringBuilder("✨ *Мои цели на эту неделю:* \n \n");
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        for (Goal goal: myGoals) {
-            String status = goal.getCompleted() ? "✅" : "";
-            response += String.format(
-                    "🎯 *Цель #%d:* %s \n\"%s\" \n📅 *Дедлайн:* %s \n🏆 *Вознаграждение:* \"%s\" \n\n",
-                    index, status, goal.getGoalName(), goal.getDeadline().format(formatter), goal.getReward()
-            );
-            InlineKeyboardButton button = new InlineKeyboardButton();
-            button.setText( "#"+ index + " " + (goal.getCompleted() ? "Отменить выполнение" : "Отметить выполненной"));
-            String jsonCallback = JsonHandler.toJson(List.of(CallbackType.COMPLETE_GOAL, goal.getId()));
-            button.setCallbackData(jsonCallback); // Используем айди цели
 
-            // Добавляем кнопку в разметку
-            List<InlineKeyboardButton> row = new ArrayList<>();
-            row.add(button);
-            keyboard.add(row);
-            index++;
-        }
+        TelegramBotHelper.setAllGoalsResponseAndKeyboard(response, myGoals, keyboard);
         // Добавляем клавиатуру в сообщение
-        InlineKeyboardMarkup markup = new InlineKeyboardMarkup();
+        var markup = new InlineKeyboardMarkup();
         markup.setKeyboard(keyboard);
 
         // Отправляем измененное сообщение
         var editMessage = new EditMessageText();
         editMessage.setChatId(String.valueOf(chatId));
         editMessage.setMessageId(messageId);  // Указываем ID изменяемого сообщения
-        editMessage.setText(response);
+        editMessage.setText(response.toString());
         editMessage.setParseMode("Markdown");
         editMessage.setReplyMarkup(markup);   // Добавляем обновленные кнопки
 

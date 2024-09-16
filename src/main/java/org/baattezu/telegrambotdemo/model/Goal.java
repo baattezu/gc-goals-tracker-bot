@@ -21,6 +21,7 @@ public class Goal {
     private LocalDateTime createdAt;
     private LocalDateTime deadline;
     private Boolean completed;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

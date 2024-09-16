@@ -9,6 +9,7 @@ import org.baattezu.telegrambotdemo.repository.GoalRepository;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,6 +40,10 @@ public class GoalService {
         return goalRepository.findByCompletedFalse();
     }
 
+    public void clearGoalsForWeek(User user){
+        goalRepository.deleteAllByUser(user);
+    }
+
     public Goal createBlankGoal(User user) {
         Goal goal = new Goal();
         goal.setUser(user);
@@ -66,16 +71,18 @@ public class GoalService {
         return goalRepository.save(goal);
     }
 
-    public List<Goal> getPendingGoals(User user) {
-        return goalRepository.findByUserIdAndCompletedFalse(user.getId());
+    public List<Goal> getAllGoals(Long userId, boolean pendingOrAll) {
+        var goalList = pendingOrAll ?
+                goalRepository.findByUserIdAndCompletedFalse(userId) :
+                goalRepository.findByUserId(userId);
+        goalList.sort(Comparator
+                .comparing(Goal::getCreatedAt)              // Сначала по дате
+                .thenComparing(Goal::getCompleted));
+        return goalList;
     }
-    public List<Goal> getAllGoals(User user) {
-        return goalRepository.findByUserId(user.getId());
-    }
+
     public Goal getGoalById(Long goalId){
-        return goalRepository.findById(goalId).orElseThrow(
-                () -> new RuntimeException("Goal not found")
-        );
+        return goalRepository.findById(goalId).orElse(null);
     }
 
     public void changeGoalCompletion(Goal goal) {

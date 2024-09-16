@@ -21,9 +21,4 @@ telegram:
   bot:
     token: 7391568163:AAGKixgnapRdXHE4j2K7kQUetEq-BexHuiw
     name: goalbot
-
-logging:
-  level:
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
-    org.flywaydb: DEBUG
+    url: https://t.me/groupgoals_bot

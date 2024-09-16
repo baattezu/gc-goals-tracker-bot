@@ -1,7 +1,8 @@
-package org.baattezu.telegrambotdemo.bot.commands;
+package org.baattezu.telegrambotdemo.bot.commands.goalsrelated;
 
 import lombok.RequiredArgsConstructor;
-import org.baattezu.telegrambotdemo.model.Chat;
+import org.baattezu.telegrambotdemo.bot.commands.Command;
+import org.baattezu.telegrambotdemo.model.GroupChat;
 import org.baattezu.telegrambotdemo.model.User;
 import org.baattezu.telegrambotdemo.service.ChatService;
 import org.baattezu.telegrambotdemo.service.UserService;
@@ -11,7 +12,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
 @RequiredArgsConstructor
-public class GetAllUsersFromThisChatCommand implements Command{
+public class GetAllUsersFromThisChatCommand implements Command {
     private final UserService userService;
     private final ChatService chatService;
 
@@ -24,21 +25,13 @@ public class GetAllUsersFromThisChatCommand implements Command{
         var message = new SendMessage();
         message.setChatId(chatId);
         int index = 1;
-        String usersText = "Список пользователей в этой группе: \n";
+        StringBuilder usersText = new StringBuilder("Список прикрепленных пользователей в этой группе: \n");
         for (User user : userList){
-            usersText = usersText + index + ". " + user.getUsername() + " \n";
-        }
-        usersText = usersText + "\n _________________ \n";
-        var allChats = chatService.getAllChats();
-        for (Chat c : allChats){
-            usersText = usersText + c.getName() + ": \n";
-            var userList2 = userService.getAllUsersFromGroupChat(c);
-            for (User user : userList2){
-                usersText = usersText + index + ". " + user.getUsername() + " \n";
-            }
+            usersText.append(index).append(". ").append(user.getUsername()).append(" \n");
+            index++;
         }
 
-        message.setText(usersText);
+        message.setText(usersText.toString());
         return message;
     }
 }

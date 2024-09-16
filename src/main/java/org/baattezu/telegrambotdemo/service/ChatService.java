@@ -2,9 +2,7 @@ package org.baattezu.telegrambotdemo.service;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
-import org.baattezu.telegrambotdemo.exc.ChatExistsException;
-import org.baattezu.telegrambotdemo.model.Chat;
-import org.baattezu.telegrambotdemo.model.User;
+import org.baattezu.telegrambotdemo.model.GroupChat;
 import org.baattezu.telegrambotdemo.repository.ChatRepository;
 import org.springframework.stereotype.Service;
 
@@ -24,10 +22,10 @@ public class ChatService {
 
     @PostConstruct
     public void init() {
-        List<Chat> chatList = chatRepository.findAll();
-        groupChatIds = chatList.stream().map(Chat::getId).collect(Collectors.toSet());
+        List<GroupChat> chatList = chatRepository.findAll();
+        groupChatIds = chatList.stream().map(GroupChat::getId).collect(Collectors.toSet());
     }
-    public Chat findById(Long id){
+    public GroupChat findById(Long id){
         return chatRepository.findById(id).orElseThrow(
                 () -> new RuntimeException("Such group not included in supported groups.")
         );
@@ -36,17 +34,15 @@ public class ChatService {
     public boolean isChatExists(Long chatId) {
         return groupChatIds.contains(chatId);
     }
-    private void addGroupChatToTempStorage(Long chatId){
-        groupChatIds.add(chatId);
-    }
-    public Chat createGroupChat(Long id, String chatName){
-        Chat chat = new Chat();
+
+    public GroupChat createGroupChat(Long id, String chatName){
+        GroupChat chat = new GroupChat();
         chat.setId(id);
         chat.setName(chatName);
         groupChatIds.add(chat.getId());
         return chatRepository.save(chat);
     }
-    public List<Chat> getAllChats(){
+    public List<GroupChat> getAllChats(){
         return chatRepository.findAll();
     }
 }

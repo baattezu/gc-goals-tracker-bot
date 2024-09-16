@@ -1,4 +1,4 @@
-package org.baattezu.telegrambotdemo.bot.callbacks.goal_creation;
+package org.baattezu.telegrambotdemo.bot.callbacks.goal;
 
 
 import lombok.RequiredArgsConstructor;
@@ -6,10 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.baattezu.telegrambotdemo.bot.callbacks.Callback;
 import org.baattezu.telegrambotdemo.bot.callbacks.CallbackHandler;
 import org.baattezu.telegrambotdemo.data.UserGoalData;
-import org.baattezu.telegrambotdemo.data.UserState;
 import org.baattezu.telegrambotdemo.model.Goal;
 import org.baattezu.telegrambotdemo.service.GoalService;
-import org.springframework.cache.annotation.CachePut;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;

@@ -1,17 +1,18 @@
-package org.baattezu.telegrambotdemo.bot;
+package org.baattezu.telegrambotdemo.bot.callbacks;
 
 import lombok.extern.slf4j.Slf4j;
-import org.baattezu.telegrambotdemo.bot.callbacks.Callback;
-import org.baattezu.telegrambotdemo.bot.callbacks.CallbackHandler;
 //import org.baattezu.telegrambotdemo.bot.callbacks.goal_creation.SetGoalCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goal_creation.EnterDeadlineCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goal_creation.StartGoalCreationCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.view_and_edit_goals.CompleteGoalCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.goal.JustCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.goal.EnterDeadlineCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.goal.StartGoalCreationCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.goal.CompleteGoalCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.message.DeleteMessageCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.users.PinToChatFromWelcomeMessageCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.users.PutResultsCallback;
 import org.baattezu.telegrambotdemo.data.CallbackType;
 import org.baattezu.telegrambotdemo.service.UserService;
 import org.baattezu.telegrambotdemo.utils.JsonHandler;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.methods.botapimethods.BotApiMethodMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
@@ -29,13 +30,21 @@ public class CallbacksHandler {
     public CallbacksHandler(
             UserService userService, StartGoalCreationCallback setGoalCallback,
             EnterDeadlineCallback enterDeadlineCallback,
-            CompleteGoalCallback completeGoalCallback
+            CompleteGoalCallback completeGoalCallback,
+            JustCallback justCallback,
+            DeleteMessageCallback deleteMessageCallback,
+            PinToChatFromWelcomeMessageCallback pinToChatFromWelcomeMessageCallback,
+            PutResultsCallback putResultsCallback
     ) {
         this.userService = userService;
         this.callbacks = Map.of(
                 CallbackType.SET_GOAL, setGoalCallback,
                 CallbackType.ENTER_DEADLINE, enterDeadlineCallback,
-                CallbackType.COMPLETE_GOAL, completeGoalCallback
+                CallbackType.COMPLETE_GOAL, completeGoalCallback,
+                CallbackType.GO_TO_PRIVATE_CHAT, justCallback,
+                CallbackType.DELETE_LAST_MESSAGES, deleteMessageCallback,
+                CallbackType.PIN_TO_CHAT, pinToChatFromWelcomeMessageCallback,
+                CallbackType.PUT_RESULTS, putResultsCallback
         );
     }
 

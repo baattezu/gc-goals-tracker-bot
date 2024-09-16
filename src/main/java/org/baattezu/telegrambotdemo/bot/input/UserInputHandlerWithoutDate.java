@@ -8,9 +8,12 @@ import org.baattezu.telegrambotdemo.data.UserState;
 import org.baattezu.telegrambotdemo.model.Goal;
 import org.baattezu.telegrambotdemo.service.GoalService;
 import org.baattezu.telegrambotdemo.service.UserService;
+import org.baattezu.telegrambotdemo.utils.BotMessagesEnum;
 import org.baattezu.telegrambotdemo.utils.JsonHandler;
+import org.baattezu.telegrambotdemo.utils.TelegramBotHelper;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
@@ -27,9 +30,11 @@ import java.util.List;
 @Slf4j
 public class UserInputHandlerWithoutDate {
 
+
+    private final UserService userService;
     private final GoalService goalService;
 
-    public SendMessage handleMessage(Update update) {
+    public Object handleMessage(Update update) {
         Long userId = update.getMessage().getFrom().getId();
         Long chatId = update.getMessage().getChatId();
         String messageText = update.getMessage().getText();
@@ -38,13 +43,15 @@ public class UserInputHandlerWithoutDate {
         UserGoalData data = goalService.getUserState(userId);
         UserState state = data.userState();
 
-        SendMessage responseMessage = null;
+        Object responseMessage = null;
+
+        int messageLength = messageText.length();
+        int remainingCharacters = 255 - messageLength;
+
         if (data != null){
             Goal goal = goalService.getGoalById(data.goalId());
             switch (state) {
                 case WAITING_FOR_TITLE:
-                    int messageLength = messageText.length();
-                    int remainingCharacters = 255 - messageLength;
                     if (messageText.length() > 255){
                         return new SendMessage(String.valueOf(chatId),
                                 "⚠️ Превышение лимита на: " + Math.abs(remainingCharacters) + " символов." +
@@ -64,9 +71,27 @@ public class UserInputHandlerWithoutDate {
                     goalService.setGoalDeadline(goal, thisWeek);
 
                     goalService.clearUserState(userId);  // Завершаем процесс
-                    responseMessage = new SendMessage(String.valueOf(chatId), "🎯 Цель на неделю успешно создана! Успехов тебе! 💪✨");
+                    responseMessage = new SendMessage(String.valueOf(chatId), "🎯 Цель на неделю успешно создана! Успехов! 💪✨");
                     break;
+                case WAITING_FOR_RESULTS:
 
+                    if (messageText.length() > 255){
+                        return new SendMessage(String.valueOf(chatId),
+                                "⚠️ Превышение лимита на: " + Math.abs(remainingCharacters) + " символов." +
+                                        "\n✂️ Пожалуйста, укоротите сообщение с результатами. 😅");
+                    }
+                    // Сохраняем описание и переходим к дедлайну
+                    userService.writeResultsForWeek(userId, messageText);
+                    goalService.clearUserState(userId);  // Завершаем процесс
+
+                    var editMessage = new EditMessageText();
+                    editMessage.setText(BotMessagesEnum.MY_RESULTS.getMessage(messageText));
+                    editMessage.setMessageId(Math.toIntExact(data.goalId()));
+                    editMessage.setChatId(update.getMessage().getChatId());
+                    TelegramBotHelper.addResultsButtons(editMessage, userId);
+                    responseMessage = editMessage;
+//                    responseMessage = new SendMessage(String.valueOf(chatId), "Спасибо, что поделились своими результатами! 📊 Ожидайте общую таблицу участников в конце недели. 👍");
+                    break;
                 default:
                     responseMessage = new SendMessage(String.valueOf(chatId), "Неизвестное состояние. Пожалуйста, начните сначала.");
                     break;
