@@ -2,10 +2,10 @@ package org.baattezu.telegrambotdemo.bot.callbacks;
 
 import lombok.extern.slf4j.Slf4j;
 //import org.baattezu.telegrambotdemo.bot.callbacks.goal_creation.SetGoalCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goal.JustCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goal.EnterDeadlineCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goal.StartGoalCreationCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goal.CompleteGoalCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.goals.JustCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.goals.EnterDeadlineCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.goals.StartGoalCreationCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.goals.CompleteGoalCallback;
 import org.baattezu.telegrambotdemo.bot.callbacks.message.DeleteMessageCallback;
 import org.baattezu.telegrambotdemo.bot.callbacks.users.PinToChatFromWelcomeMessageCallback;
 import org.baattezu.telegrambotdemo.bot.callbacks.users.PutResultsCallback;

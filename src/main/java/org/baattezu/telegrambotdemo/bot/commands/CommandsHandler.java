@@ -1,17 +1,19 @@
 package org.baattezu.telegrambotdemo.bot.commands;
 
 import lombok.Data;
-import org.baattezu.telegrambotdemo.bot.commands.*;
-import org.baattezu.telegrambotdemo.bot.commands.goalsrelated.*;
+import org.baattezu.telegrambotdemo.bot.commands.goals.*;
 import org.baattezu.telegrambotdemo.bot.commands.pinning.PinToChatCommand;
 import org.baattezu.telegrambotdemo.bot.commands.pinning.UnpinFromChatCommand;
-import org.baattezu.telegrambotdemo.bot.commands.usersrelated.CheckInCommand;
-import org.baattezu.telegrambotdemo.bot.commands.usersrelated.ChangeNameCommand;
-import org.baattezu.telegrambotdemo.bot.commands.usersrelated.StartCommand;
+import org.baattezu.telegrambotdemo.bot.commands.results.GetPhoto;
+import org.baattezu.telegrambotdemo.bot.commands.results.Top5Results;
+import org.baattezu.telegrambotdemo.bot.commands.users.CheckInCommand;
+import org.baattezu.telegrambotdemo.bot.commands.users.ChangeNameCommand;
+import org.baattezu.telegrambotdemo.bot.commands.users.StartCommand;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Component
@@ -30,20 +32,21 @@ public class CommandsHandler {
             UnpinFromChatCommand unpinFromChatCommand,
             GetAllUsersFromThisChatCommand getAllUsersFromThisChatCommand,
             WriteResultsCommand writeResultsCommand,
-            GetPhoto getPhoto
+            GetPhoto getPhoto,
+            Top5Results top5results
     ) {
-        this.commands = Map.of(
-                "/start", startCommand,
-                "/change_name", changeNameCommand,
-                "/check_in", checkInCommand,
-                "/set_goal", setGoalCommand,
-                "/my_goals", getMyGoalsCommand,
-                "/pin_to_chat", pinToChatCommand,
-                "/unpin_from_chat", unpinFromChatCommand,
-                "/list_users", getAllUsersFromThisChatCommand,
-                "/results" ,writeResultsCommand,
-                "/get_photo", getPhoto
-        );
+        this.commands = new HashMap<>();
+        this.commands.put("/start", startCommand);
+        this.commands.put("/change_name", changeNameCommand);
+        this.commands.put("/check_in", checkInCommand);
+        this.commands.put("/set_goal", setGoalCommand);
+        this.commands.put("/my_goals", getMyGoalsCommand);
+        this.commands.put("/pin_to_chat", pinToChatCommand);
+        this.commands.put("/unpin_from_chat", unpinFromChatCommand);
+        this.commands.put("/list_users", getAllUsersFromThisChatCommand);
+        this.commands.put("/results", writeResultsCommand);
+        this.commands.put("/get_photo", getPhoto);
+        this.commands.put("/top5", top5results);
     }
 
     public SendMessage handleCommand(Update update) {

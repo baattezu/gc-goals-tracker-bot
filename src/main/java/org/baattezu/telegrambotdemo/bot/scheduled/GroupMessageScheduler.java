@@ -4,18 +4,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.baattezu.telegrambotdemo.bot.GoalBot;
 import org.baattezu.telegrambotdemo.model.GroupChat;
-import org.baattezu.telegrambotdemo.results.ResultGenerator;
+import org.baattezu.telegrambotdemo.results.ProgressImageGenerator;
+import org.baattezu.telegrambotdemo.results.ScheduledResultsGenerator;
 import org.baattezu.telegrambotdemo.service.ChatService;
 import org.baattezu.telegrambotdemo.utils.BotMessagesEnum;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -30,7 +29,9 @@ public class GroupMessageScheduler {
     private final static String RESULTS_PATH = "/results/resultsimagefolder";
     private final GoalBot telegramBot;
     private final ChatService chatService;
-    private final ResultGenerator resultGenerator;
+
+    private final ProgressImageGenerator progressImageGenerator;
+    private final ScheduledResultsGenerator top5UsersResultsGenerator;
 
 
     // Отправка сообщений каждый день в 9:00
@@ -51,7 +52,7 @@ public class GroupMessageScheduler {
         var gChats = chatService.getAllChats();
         for (GroupChat gc : gChats){
             try {
-                resultGenerator.generateResult(String.valueOf(gc.getId()));
+                progressImageGenerator.generateResult(String.valueOf(gc.getId()));
             } catch (IOException e) {
                 log.error("Не удалось создать таблицу для чата " + gc.getName() + " ;(");
                 throw new RuntimeException(e);
@@ -63,7 +64,7 @@ public class GroupMessageScheduler {
         var gChats = chatService.getAllChats();
         for (GroupChat gc : gChats){
             try {
-                resultGenerator.generateResult(String.valueOf(gc.getId()));
+                progressImageGenerator.generateResult(String.valueOf(gc.getId()));
             } catch (IOException e) {
                 log.error("Не удалось создать таблицу для чата " + gc.getName() + " ;(");
                 throw new RuntimeException(e);

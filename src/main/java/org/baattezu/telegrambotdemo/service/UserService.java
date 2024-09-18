@@ -67,4 +67,6 @@ public class UserService {
     public List<User> getAllUsersFromGroupChat(GroupChat chat) {
         return userRepository.findAllByGroupChat(chat);
     }
+
+
 }

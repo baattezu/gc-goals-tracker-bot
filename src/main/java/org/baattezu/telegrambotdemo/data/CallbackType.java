@@ -10,5 +10,6 @@ public enum CallbackType {
     GO_TO_PRIVATE_CHAT,
     DELETE_LAST_MESSAGES,
     PIN_TO_CHAT,
-    PUT_RESULTS
+    PUT_RESULTS,
+    VIEW_USER_RESULTS_FROM_TOP
 }

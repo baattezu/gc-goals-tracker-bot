@@ -1,6 +1,7 @@
 package org.baattezu.telegrambotdemo.service;
 
 import jakarta.annotation.PostConstruct;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.baattezu.telegrambotdemo.model.GroupChat;
 import org.baattezu.telegrambotdemo.repository.ChatRepository;
@@ -21,6 +22,7 @@ public class ChatService {
     private Set<Long> groupChatIds;
 
     @PostConstruct
+    @Transactional
     public void init() {
         List<GroupChat> chatList = chatRepository.findAll();
         groupChatIds = chatList.stream().map(GroupChat::getId).collect(Collectors.toSet());
