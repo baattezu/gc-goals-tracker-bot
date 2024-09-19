@@ -1,6 +1,5 @@
 package org.baattezu.telegrambotdemo.bot.callbacks.goals;
 
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.baattezu.telegrambotdemo.bot.callbacks.Callback;
@@ -22,7 +21,7 @@ import java.util.List;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public class CompleteGoalCallback implements CallbackHandler {
+public class CompleteInAllGoalsCallback implements CallbackHandler {
 
     private final GoalService goalService;
     private final UserService userService;
@@ -40,15 +39,15 @@ public class CompleteGoalCallback implements CallbackHandler {
         var user = userService.findById(userId);
         goalService.changeGoalCompletion(completedGoal);
         // Формируем новый текст сообщения
-        var myGoals = goalService.getAllGoals(user.getId(), true);
+        var myGoals = goalService.getAllGoals(user.getId(), false);
 
         var response = new StringBuilder(
                 BotMessagesEnum.MY_GOALS_ON_THIS_WEEK.getMessage(
-                        "невыполненные"
+                        "все"
                 ));
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 
-        TelegramBotHelper.setAllGoalsResponseAndKeyboard(response, myGoals, keyboard, true);
+        TelegramBotHelper.setAllGoalsResponseAndKeyboard(response, myGoals, keyboard,false);
         // Добавляем клавиатуру в сообщение
         var markup = new InlineKeyboardMarkup();
         markup.setKeyboard(keyboard);
