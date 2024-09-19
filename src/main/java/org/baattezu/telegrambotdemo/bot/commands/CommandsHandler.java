@@ -28,6 +28,7 @@ public class CommandsHandler {
             CheckInCommand checkInCommand,
             SetGoalCommand setGoalCommand,
             GetMyGoalsCommand getMyGoalsCommand,
+            GetAllMyGoalsCommand getAllMyGoalsCommand,
             PinToChatCommand pinToChatCommand,
             UnpinFromChatCommand unpinFromChatCommand,
             GetAllUsersFromThisChatCommand getAllUsersFromThisChatCommand,
@@ -40,7 +41,8 @@ public class CommandsHandler {
         this.commands.put("/change_name", changeNameCommand);
         this.commands.put("/check_in", checkInCommand);
         this.commands.put("/set_goal", setGoalCommand);
-        this.commands.put("/my_goals", getMyGoalsCommand);
+        this.commands.put("/goals", getMyGoalsCommand);
+        this.commands.put("/all_goals", getAllMyGoalsCommand);
         this.commands.put("/pin_to_chat", pinToChatCommand);
         this.commands.put("/unpin_from_chat", unpinFromChatCommand);
         this.commands.put("/list_users", getAllUsersFromThisChatCommand);

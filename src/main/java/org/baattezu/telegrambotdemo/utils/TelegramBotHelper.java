@@ -15,27 +15,31 @@ import java.util.List;
 
 public class TelegramBotHelper {
 
-    public static List<InlineKeyboardButton> addGoalCheckButton(int index, Goal goal){
+    private static List<InlineKeyboardButton> addGoalCheckButton(int index, Goal goal, boolean pendingOrAll){
         List<InlineKeyboardButton> row = new ArrayList<>();
 
         InlineKeyboardButton button = new InlineKeyboardButton();
         button.setText( "#"+ index + " " + (goal.getCompleted() ? "Отменить выполнение" : "Отметить выполненной"));
-        String jsonCallback = JsonHandler.toJson(List.of(CallbackType.COMPLETE_GOAL, goal.getId()));
+        CallbackType callbackType = pendingOrAll ? CallbackType.COMPLETE_GOAL : CallbackType.COMPLETE_IN_ALL_GOALS;
+        String jsonCallback = JsonHandler.toJson(List.of(callbackType, goal.getId()));
         button.setCallbackData(jsonCallback); // Используем айди цели
 
         // Добавляем кнопку в разметку
         row.add(button);
         return row;
     }
-    public static void setAllGoalsResponseAndKeyboard(StringBuilder response, List<Goal> myGoals, List<List<InlineKeyboardButton>> keyboard){
+    public static void setAllGoalsResponseAndKeyboard(StringBuilder response, List<Goal> myGoals, List<List<InlineKeyboardButton>> keyboard, boolean pendingOrAll){
         var index = 1;
         var formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         for (var goal: myGoals) {
             var status = goal.getCompleted() ? "✅" : "";
-            response.append(BotMessagesEnum.GET_GOAL_DETAIL_MESSAGE.getMessage(
-                    index, status, goal.getGoalName(), goal.getDeadline().format(formatter), goal.getReward()
+            response.append(BotMessagesEnum.GET_GOAL_DETAIL_MESSAGE_VER1.getMessage(
+                    index, status, goal.getGoalName(), goal.getReward()
             ));
-            keyboard.add(TelegramBotHelper.addGoalCheckButton(index, goal));
+//            response.append(BotMessagesEnum.GET_GOAL_DETAIL_MESSAGE_VER2.getMessage(
+//                      goal.getGoalName(), goal.getReward(), status
+//            ));
+            keyboard.add(TelegramBotHelper.addGoalCheckButton(index, goal, pendingOrAll));
             index++;
         }
     }

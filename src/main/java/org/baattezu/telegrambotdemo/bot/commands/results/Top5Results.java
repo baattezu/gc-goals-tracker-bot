@@ -42,13 +42,13 @@ public class Top5Results implements Command {
             // Создаем кнопку для каждого пользователя
             InlineKeyboardButton button = new InlineKeyboardButton();
 //            button.setText("Посмотреть "+ index + "# " + user.getUsername());
-            button.setText("\uD83D\uDC41\uFE0F "+ index + "# ");
+            button.setText(index + "#");
             String jsonCallback = JsonHandler.toJson(List.of(CallbackType.VIEW_USER_RESULTS_FROM_TOP, user.getId()));
             button.setCallbackData(jsonCallback); // Уникальный идентификатор для коллбэка
 
             // Добавляем кнопку в ряд
             List<InlineKeyboardButton> rowInline = new ArrayList<>();
-            if (index > 100){
+            if (index > 50){
                 rowInline3.add(button);
             } else if (index > 69) {
                 rowInline2.add(button);

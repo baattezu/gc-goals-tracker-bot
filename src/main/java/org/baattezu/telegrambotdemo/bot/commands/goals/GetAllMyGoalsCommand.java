@@ -1,5 +1,6 @@
 package org.baattezu.telegrambotdemo.bot.commands.goals;
 
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.baattezu.telegrambotdemo.bot.commands.Command;
@@ -19,7 +20,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @Slf4j
-public class GetMyGoalsCommand implements Command {
+public class GetAllMyGoalsCommand implements Command {
 
     private final UserService userService;
     private final GoalService goalService;
@@ -31,21 +32,21 @@ public class GetMyGoalsCommand implements Command {
 
         var message = new SendMessage();
         message.setChatId(chatId);
-        
+
         var user = userService.findById(userId);
         if (user == null) {
             return TelegramBotHelper.messageWithDeleteOption(
                     BotMessagesEnum.REGISTER_BEFORE_GET_GOAL_MESSAGE.getMessage(), update, true
             );
         }
-        var myGoals = goalService.getAllGoals(userId, true);
+        var myGoals = goalService.getAllGoals(userId, false);
         var response = new StringBuilder(
                 BotMessagesEnum.MY_GOALS_ON_THIS_WEEK.getMessage(
-                        "невыполненные"
+                        "все"
                 ));
         List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 
-        TelegramBotHelper.setAllGoalsResponseAndKeyboard(response, myGoals, keyboard,true);
+        TelegramBotHelper.setAllGoalsResponseAndKeyboard(response, myGoals, keyboard, false);
 
         var markup = new InlineKeyboardMarkup();
         markup.setKeyboard(keyboard);

@@ -2,10 +2,7 @@ package org.baattezu.telegrambotdemo.bot.callbacks;
 
 import lombok.extern.slf4j.Slf4j;
 //import org.baattezu.telegrambotdemo.bot.callbacks.goal_creation.SetGoalCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goals.JustCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goals.EnterDeadlineCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goals.StartGoalCreationCallback;
-import org.baattezu.telegrambotdemo.bot.callbacks.goals.CompleteGoalCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.goals.*;
 import org.baattezu.telegrambotdemo.bot.callbacks.message.DeleteMessageCallback;
 import org.baattezu.telegrambotdemo.bot.callbacks.users.PinToChatFromWelcomeMessageCallback;
 import org.baattezu.telegrambotdemo.bot.callbacks.users.PutResultsCallback;
@@ -34,13 +31,15 @@ public class CallbacksHandler {
             JustCallback justCallback,
             DeleteMessageCallback deleteMessageCallback,
             PinToChatFromWelcomeMessageCallback pinToChatFromWelcomeMessageCallback,
-            PutResultsCallback putResultsCallback
+            PutResultsCallback putResultsCallback,
+            CompleteInAllGoalsCallback completeInAllGoalsCallback
     ) {
         this.userService = userService;
         this.callbacks = Map.of(
                 CallbackType.SET_GOAL, setGoalCallback,
                 CallbackType.ENTER_DEADLINE, enterDeadlineCallback,
                 CallbackType.COMPLETE_GOAL, completeGoalCallback,
+                CallbackType.COMPLETE_IN_ALL_GOALS, completeInAllGoalsCallback,
                 CallbackType.GO_TO_PRIVATE_CHAT, justCallback,
                 CallbackType.DELETE_LAST_MESSAGES, deleteMessageCallback,
                 CallbackType.PIN_TO_CHAT, pinToChatFromWelcomeMessageCallback,
