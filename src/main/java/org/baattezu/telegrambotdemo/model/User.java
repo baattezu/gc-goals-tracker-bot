@@ -12,10 +12,14 @@ public class User {
     private Long id;
     private String username;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "chat_id")
-    private Chat chat;
+    @Column(name = "private_chat_id")
+    private Long privateChatId;
 
-    private boolean isPinned = false; // Флаг, показывающий закреплен ли пользователь
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "group_chat_id")
+    private GroupChat groupChat;
+
+    @Column(name = "results_for_week")
+    private String resultsForWeek;
 
 }

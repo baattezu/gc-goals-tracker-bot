@@ -26,7 +26,6 @@ import java.util.List;
 @Slf4j
 public class UserInputHandler {
 
-    private final UserService userService;
     private final GoalService goalService;
 
     public SendMessage handleMessage(Update update) {

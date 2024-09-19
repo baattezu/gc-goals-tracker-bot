@@ -2,22 +2,28 @@ package org.baattezu.telegrambotdemo.bot;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.baattezu.telegrambotdemo.bot.input.UserInputHandler;
+import org.baattezu.telegrambotdemo.bot.callbacks.CallbacksHandler;
+import org.baattezu.telegrambotdemo.bot.commands.CommandsHandler;
 import org.baattezu.telegrambotdemo.bot.input.UserInputHandlerWithoutDate;
-import org.baattezu.telegrambotdemo.data.CallbackType;
 import org.baattezu.telegrambotdemo.data.UserGoalData;
 import org.baattezu.telegrambotdemo.data.UserState;
 import org.baattezu.telegrambotdemo.service.ChatService;
 import org.baattezu.telegrambotdemo.service.GoalService;
-import org.baattezu.telegrambotdemo.utils.JsonHandler;
+import org.baattezu.telegrambotdemo.utils.BotMessagesEnum;
+import org.baattezu.telegrambotdemo.utils.TelegramBotHelper;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -28,6 +34,9 @@ public class GoalBot extends TelegramLongPollingBot {
     private String botToken;
     @Value("${telegram.bot.name}")
     private String botUsername;
+    @Value("${telegram.bot.url}")
+    private String botUrl;
+
 
     private final GoalService goalService;
     private final ChatService chatService;
@@ -37,23 +46,44 @@ public class GoalBot extends TelegramLongPollingBot {
     @Override
     public void onUpdateReceived(Update update) {
         // Проверка на наличие сообщения
-        if (update.hasMessage()) {
-            // Проверка на текстовое сообщение
-            if (update.getMessage().hasText()) {
-                handleMessage(update);
+        try {
+            if (update.hasMessage()) {
+                // Проверка на текстовое сообщение
+                if (update.getMessage().hasText()) {
+                    handleMessage(update);
+                }
+                // Проверка на групповое сообщение и добавление чата в базу
+                else if (update.getMessage().getChat().isGroupChat() &&
+                        !chatService.isChatExists(update.getMessage().getChat().getId())) {
+                    handleAddingToGroupChat(update);
+                }
             }
-            // Проверка на групповое сообщение и добавление чата в базу
-            else if (update.getMessage().getChat().isGroupChat() &&
-                    !chatService.isChatExists(update.getMessage().getChat().getId())) {
-                handleAddingToGroupChat(update);
+            // Обработка коллбэков
+            else if (update.hasCallbackQuery()) {
+                handleCallbackQuery(update);
             }
-        }
-        // Обработка коллбэков
-        else if (update.hasCallbackQuery()) {
-            handleCallbackQuery(update);
+        } catch (Exception e){
+            try {
+                log.error(e.getMessage());
+                handleException(update);
+            } catch (TelegramApiException ex) {
+                throw new RuntimeException(ex);
+            }
         }
     }
+    private void handleException(Update update) throws TelegramApiException {
+        var excmessage = new SendMessage();
+        excmessage.setChatId(update.getMessage().getChatId());
+        excmessage.setText("Упс, что то пошло не так(");
 
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        TelegramBotHelper.deleteLastMessages(excmessage, update.getMessage().getMessageId(), keyboard);
+
+        var markupInline = new InlineKeyboardMarkup();
+        markupInline.setKeyboard(keyboard);
+        excmessage.setReplyMarkup(markupInline);
+        execute(excmessage);
+    }
 
     private void sendMessage(Object object) {
         try {
@@ -61,6 +91,14 @@ public class GoalBot extends TelegramLongPollingBot {
                 execute(sendMessage);
             } else if (object instanceof EditMessageText editMessageText){
                 execute(editMessageText);
+            }
+            else if (object instanceof DeleteMessage deleteMessage){
+                execute(deleteMessage);
+            }
+            else if (object instanceof List list){
+                for (DeleteMessage deleteMessage : (List<DeleteMessage>) list){
+                    execute(deleteMessage);
+                }
             }
         } catch (TelegramApiException e) {
             log.error(e.getMessage());
@@ -72,12 +110,17 @@ public class GoalBot extends TelegramLongPollingBot {
         var chatId = update.getMessage().getChatId();
         var chatName = update.getMessage().getChat().getTitle();
 
-        String welcomeMessage =
-                "Привет! Я бот для ваших целей и задач. " +
-                        "Чтобы зарегистрироваться, введи команду /рег [Твое Имя].";
-        SendMessage message = new SendMessage();
+        var message = new SendMessage();
         message.setChatId(String.valueOf(chatId));
-        message.setText(welcomeMessage);
+
+        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        TelegramBotHelper.addButtonsForGCWelcomeMessage(keyboard, botUrl);
+
+        var markupInline = new InlineKeyboardMarkup();
+        markupInline.setKeyboard(keyboard);
+        message.setReplyMarkup(markupInline);
+
+        message.setText(BotMessagesEnum.WELCOME_GC_MESSAGE.getMessage());
 
         chatService.createGroupChat(chatId, chatName);
         sendMessage(message);
@@ -100,20 +143,13 @@ public class GoalBot extends TelegramLongPollingBot {
         }
         // Если пользователь находится в процессе создания цели
         if (update.getMessage().getText().startsWith("/")) {
-            // -s
             sendMessage(commandsHandler.handleCommand(update));
         } else if (
-                currentState != null ||
-                currentState == UserState.WAITING_FOR_TITLE ||
-                currentState == UserState.WAITING_FOR_DESCRIPTION ||
-                currentState == UserState.WAITING_FOR_DEADLINE
+                currentState != null
         ) {
             // Если это команда, обрабатываем команду
-            SendMessage responseMessage = inputHandler.handleMessage(update);
+            Object responseMessage = inputHandler.handleMessage(update);
             sendMessage(responseMessage);
-        } else {
-            // Отправляем сообщение, если команда не распознана
-            sendMessage(new SendMessage(update.getMessage().getChatId().toString(), "Неизвестная команда."));
         }
     }
 
@@ -126,4 +162,5 @@ public class GoalBot extends TelegramLongPollingBot {
     public String getBotToken() {
         return botToken;
     }
+
 }

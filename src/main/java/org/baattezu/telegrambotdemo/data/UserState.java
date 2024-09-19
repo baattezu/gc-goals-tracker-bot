@@ -8,5 +8,6 @@ public enum UserState {
     WAITING_FOR_TITLE,
     WAITING_FOR_DESCRIPTION,
     WAITING_FOR_REWARD,
-    WAITING_FOR_DEADLINE,   // Добавь другие состояния по необходимости
+    WAITING_FOR_DEADLINE,
+    WAITING_FOR_RESULTS// Добавь другие состояния по необходимости
 }
