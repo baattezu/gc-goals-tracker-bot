@@ -31,9 +31,11 @@ public class CompleteInAllGoalsCallback implements CallbackHandler {
     public EditMessageText execute(Callback callback, Update update) {
         var userId = update.getCallbackQuery().getFrom().getId();
         var chatId = update.getCallbackQuery().getMessage().getChatId();
-        var messageId = update.getCallbackQuery().getMessage().getMessageId();
 
-        var goalId = Long.valueOf(callback.getData());
+        var messageId = update.getCallbackQuery().getMessage().getMessageId();
+        var callbackData = callback.getData().split(":");
+        var goalId = Long.valueOf(callbackData[0]);
+        var currentPage = Integer.parseInt(callbackData[1]);
         Goal completedGoal = goalService.getGoalById(goalId);
 
         var user = userService.findById(userId);
@@ -42,24 +44,16 @@ public class CompleteInAllGoalsCallback implements CallbackHandler {
         var myGoals = goalService.getAllGoals(user.getId(), false);
 
         var response = new StringBuilder(
-                BotMessagesEnum.MY_GOALS_ON_THIS_WEEK.getMessage(
-                        "все"
-                ));
-        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-
-        TelegramBotHelper.setAllGoalsResponseAndKeyboard(response, myGoals, keyboard,false);
-        // Добавляем клавиатуру в сообщение
-        var markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(keyboard);
+                BotMessagesEnum.MY_GOALS_ON_THIS_WEEK.getMessage());
 
         // Отправляем измененное сообщение
         var editMessage = new EditMessageText();
         editMessage.setChatId(String.valueOf(chatId));
         editMessage.setMessageId(messageId);  // Указываем ID изменяемого сообщения
+        editMessage.enableHtml(true);
+        editMessage.setReplyMarkup(TelegramBotHelper
+                .setAllGoalsResponseAndKeyboard(response, myGoals, currentPage, false));   // Добавляем обновленные кнопки
         editMessage.setText(response.toString());
-        editMessage.setParseMode("Markdown");
-        editMessage.setReplyMarkup(markup);   // Добавляем обновленные кнопки
-
         return editMessage;
     }
 }

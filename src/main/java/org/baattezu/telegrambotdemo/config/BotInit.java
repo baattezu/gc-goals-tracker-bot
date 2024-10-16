@@ -30,21 +30,18 @@ public class BotInit {
         List<BotCommand> commands = new ArrayList<>();
         commands.add(new BotCommand("/help", "Получить список доступных команд и их описание."));
         commands.add(new BotCommand("/info", "Получить информацию о текущем статусе или состоянии бота."));
-        commands.add(new BotCommand("/change_name", "Изменение вашего имени."));
+        commands.add(new BotCommand("/change_name ", "Изменение вашего имени."));
         commands.add(new BotCommand("/pin_to_chat", "Закрепить пользователя в чате"));
         commands.add(new BotCommand("/set_goal", "Установить новую цель."));
-        commands.add(new BotCommand("/my_goals", "Просмотр ваших целей."));
+        commands.add(new BotCommand("/goals", "Просмотр ваших целей."));
         commands.add(new BotCommand("/results", "Отправить результаты."));
         commands.add(new BotCommand("/list_users", "Показать всех пользователей чата."));
+        commands.add(new BotCommand("/progress","Посмотреть группу"));
 
-        SetMyCommands setMyCommands = SetMyCommands.builder()
-                .commands(commands) // Добавление списка команд
-                .scope(new BotCommandScopeDefault()) // Установка области видимости команд
-                .languageCode("ru") // Установка кода языка (например, "ru" для русского)
-                .build();
-        SetMyCommands setMyCommands1 = new SetMyCommands(commands, null , null);
+        SetMyCommands setMyCommands = new SetMyCommands(
+                commands, null , null);
         try {
-            telegramBot.execute(setMyCommands1);
+            telegramBot.execute(setMyCommands);
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }

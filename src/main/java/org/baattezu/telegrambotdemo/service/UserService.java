@@ -1,25 +1,23 @@
 package org.baattezu.telegrambotdemo.service;
 
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.baattezu.telegrambotdemo.model.GroupChat;
 import org.baattezu.telegrambotdemo.model.User;
 import org.baattezu.telegrambotdemo.repository.UserRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
 
-    public boolean isRegistered(Long userId){
+    public boolean isRegistered(Long userId) {
         return userRepository.existsById(userId);
     }
 
@@ -32,35 +30,35 @@ public class UserService {
         newUser.setGroupChat(null);
         return userRepository.save(newUser);
     }
-    public User changeName(Long userId, String newName){
-        User user = userRepository.findById(userId).orElse(null);
+    @Transactional
+    public User changeName(User user, String newName) {
+        log.info("Changing username from {} to {}", user.getUsername(), newName);
         user.setUsername(newName);
         return userRepository.save(user);
     }
 
-    public User pinToChat(User user, GroupChat chat){
+    public User pinToChat(User user, GroupChat chat) {
         user.setGroupChat(chat);
         return userRepository.save(user);
     }
-    public User unpinToChat(User user){
-        user.setGroupChat(null);
-        return userRepository.save(user);
-    }
+
     public User findById(Long id) {
         // Метод обращается к базе данных для получения пользователя по ID
         return userRepository.findById(id).orElse(null);
     }
 
-    public void clearResultsForWeek(User user){
+    public void clearResultsForWeek(User user) {
         user.setResultsForWeek("Пока нет результатов");
         userRepository.save(user);
     }
-    public void writeResultsForWeek(Long userId, String results){
+
+    public void writeResultsForWeek(Long userId, String results) {
         var user = findById(userId);
         user.setResultsForWeek(results);
         userRepository.save(user);
     }
-    public Long getPrivateChatId(Long userId){
+
+    public Long getPrivateChatId(Long userId) {
         return findById(userId).getPrivateChatId();
     }
 

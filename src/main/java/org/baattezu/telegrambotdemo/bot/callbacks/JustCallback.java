@@ -1,4 +1,4 @@
-package org.baattezu.telegrambotdemo.bot.callbacks.goals;
+package org.baattezu.telegrambotdemo.bot.callbacks;
 
 import org.baattezu.telegrambotdemo.bot.callbacks.Callback;
 import org.baattezu.telegrambotdemo.bot.callbacks.CallbackHandler;
