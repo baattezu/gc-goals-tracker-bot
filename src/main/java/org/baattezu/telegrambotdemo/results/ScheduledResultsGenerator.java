@@ -38,16 +38,12 @@ public class ScheduledResultsGenerator{
     public String getTop5UsersInGroupMessage(String chatId){
         List<Map.Entry<User, Double>> topUsersList = getTop5UsersInGroup(chatId);
 
-        StringBuilder announcement = new StringBuilder();
-        announcement.append("✨ *Топ-5 самых результативных участников!* ✨\n\n")
-                .append("Дорогие друзья, мы рады поделиться с вами достижениями нашей группы! 🌟 Благодаря вашему упорству и стремлению к успеху, ")
-                .append("мы собрали топ-5 пользователей, которые показали наивысшие результаты за последнее время:\n\n");
-
         int rank = 1;
         String[] medals = {"🥇", "🥈", "🥉", "🏅", "🏅"};
+        StringBuilder topUsersBuilder = new StringBuilder();
 
         for (Map.Entry<User, Double> entry : topUsersList) {
-            announcement.append(String.format("%s *%d место:* %s – %.2f%%\n",
+            topUsersBuilder.append(String.format("%s *%d место:* %s – %.2f%%\n",
                     medals[rank - 1],
                     rank,
                     entry.getKey().getUsername(),
@@ -56,14 +52,37 @@ public class ScheduledResultsGenerator{
             rank++;
         }
 
-        announcement.append("\nВаше усердие и мотивация вдохновляют нас всех! 🎉 Продолжайте в том же духе, и вместе мы добьемся еще больших высот. ")
-                .append("Не забывайте, что каждое маленькое усилие приближает вас к большой цели. Вы молодцы! 💪🌈\n\n")
-                .append("Давайте продолжим поддерживать друг друга и стремиться к лучшему! 🚀")
-                .append("Под этим сообщением вы можете найти кнопки для просмотра целей и результатов топ-5 пользователей. 🎯\n")
-                .append("Выберите 1#, 2#, или 3# для детализации их достижений.\n");
-
-        return announcement.toString();
+        // Подстановка значений в шаблон
+        return BotMessagesEnum.SCHEDULED_SATURDAY_RESULTS.getMessage(topUsersBuilder.toString());
     }
+    @Transactional
+    public String getTop5UsersGoalsAndResults(String chatId){
+        List<Map.Entry<User, Double>> topUsersList = getTop5UsersInGroup(chatId);
+
+        StringBuilder text = new StringBuilder();
+        var rank = 1;
+        for (Map.Entry<User, Double> entry : topUsersList) {
+            var user = entry.getKey();
+            var goals = goalService.getAllGoals(user.getId(), false);
+            var newText = new StringBuilder("\n" +
+                    "Цели и результаты " + rank + "#:\n");
+            var index = 1;
+            for (var g : goals){
+                newText.append(BotMessagesEnum.GET_GOAL_DETAIL_MESSAGE_VER1.getMessage(
+                        index,  g.getCompleted() ? "✅" : "", g.getGoal(), g.getReward()));
+                index++;
+            }
+            text.append(newText).append("\n\n______________________");
+            rank++;
+        }
+        if (text.toString().contains("Цели и результаты")){
+            text = new StringBuilder(text.toString().replace("Цели и результаты", "<blockquote expandable> Цели и результаты"));
+            text = new StringBuilder(text.toString().replace("______________________", "______________________</blockquote>"));
+        }
+        return text.toString();
+    }
+
+
 
 
 }

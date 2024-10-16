@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import org.baattezu.telegrambotdemo.data.UserState;
 
+import java.util.List;
+
 @Entity
 @Data
 @Table(name = "users")
@@ -19,7 +21,7 @@ public class User {
     @JoinColumn(name = "group_chat_id")
     private GroupChat groupChat;
 
-    @Column(name = "results_for_week")
+    @Column(name = "results_for_week", columnDefinition = "TEXT")
     private String resultsForWeek;
 
 }

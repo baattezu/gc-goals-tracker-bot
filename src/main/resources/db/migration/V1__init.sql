@@ -15,8 +15,8 @@ ALTER TABLE users ADD CONSTRAINT fk_chat_user
 -- Create table for Goal
 CREATE TABLE IF NOT EXISTS goals (
     id BIGSERIAL PRIMARY KEY,
-    goal_name VARCHAR(255) NOT NULL,
-    reward varchar(200),
+    goal text NOT NULL,
+    reward text,
     created_at TIMESTAMP NOT NULL,
     deadline TIMESTAMP NOT NULL,
     completed BOOLEAN NOT NULL,

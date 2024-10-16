@@ -3,7 +3,6 @@ package org.baattezu.telegrambotdemo.bot.commands;
 import lombok.Data;
 import org.baattezu.telegrambotdemo.bot.commands.goals.*;
 import org.baattezu.telegrambotdemo.bot.commands.pinning.PinToChatCommand;
-import org.baattezu.telegrambotdemo.bot.commands.pinning.UnpinFromChatCommand;
 import org.baattezu.telegrambotdemo.bot.commands.results.GetPhoto;
 import org.baattezu.telegrambotdemo.bot.commands.results.Top5Results;
 import org.baattezu.telegrambotdemo.bot.commands.users.CheckInCommand;
@@ -28,9 +27,7 @@ public class CommandsHandler {
             CheckInCommand checkInCommand,
             SetGoalCommand setGoalCommand,
             GetMyGoalsCommand getMyGoalsCommand,
-            GetAllMyGoalsCommand getAllMyGoalsCommand,
             PinToChatCommand pinToChatCommand,
-            UnpinFromChatCommand unpinFromChatCommand,
             GetAllUsersFromThisChatCommand getAllUsersFromThisChatCommand,
             WriteResultsCommand writeResultsCommand,
             GetPhoto getPhoto,
@@ -42,16 +39,14 @@ public class CommandsHandler {
         this.commands.put("/check_in", checkInCommand);
         this.commands.put("/set_goal", setGoalCommand);
         this.commands.put("/goals", getMyGoalsCommand);
-        this.commands.put("/all_goals", getAllMyGoalsCommand);
         this.commands.put("/pin_to_chat", pinToChatCommand);
-        this.commands.put("/unpin_from_chat", unpinFromChatCommand);
         this.commands.put("/list_users", getAllUsersFromThisChatCommand);
         this.commands.put("/results", writeResultsCommand);
-        this.commands.put("/get_photo", getPhoto);
+        this.commands.put("/progress", getPhoto);
         this.commands.put("/top5", top5results);
     }
 
-    public SendMessage handleCommand(Update update) {
+    public Object handleCommand(Update update) {
         String messageText = update.getMessage().getText();
 
         if (messageText.contains("@")) {
@@ -60,7 +55,7 @@ public class CommandsHandler {
         String command = messageText.split(" ")[0]; // Первая часть текста — это команда
         long chatId = update.getMessage().getChatId();
 
-        Command commandHandler = commands.get(command);
+        Command<?> commandHandler = commands.get(command);
         if (commandHandler != null) {
             return commandHandler.execute(update);
         } else {

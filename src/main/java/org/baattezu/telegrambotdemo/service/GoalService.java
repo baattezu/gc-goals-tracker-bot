@@ -12,7 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,8 +23,6 @@ import java.util.stream.Collectors;
 public class GoalService {
 
     private final GoalRepository goalRepository;
-    private final UserRepository userRepository;
-
     private final Map<Long, UserGoalData> userStates = new HashMap<>();
 
     public void setUserState(Long userId, UserState state, Long goalId) {
@@ -35,43 +35,30 @@ public class GoalService {
     public void clearUserState(Long userId) {
         userStates.remove(userId);
     }
-
-    public List<Goal> getAllPendingGoalsForUser(Long userId) {
-        return goalRepository.findByUserIdAndCompletedFalse(userId);
-    }
-    public List<Goal> getAllPendingGoals() {
-        return goalRepository.findByCompletedFalse();
-    }
-
     public void clearGoalsForWeek(User user){
         goalRepository.deleteAllByUser(user);
     }
 
-    public Goal createBlankGoal(User user) {
+    public Goal createBlankGoal(Long userId) {
         Goal goal = new Goal();
-        goal.setUser(user);
+        goal.setUserId(userId);
         goal.setCompleted(false);
-        goal.setGoalName("Пусто");
-        goal.setDescription("Пусто");
+        goal.setGoal("Пусто");
         goal.setCreatedAt(LocalDateTime.now());
-        goal.setDeadline(LocalDateTime.now().plusDays(1));
+        goal.setDeadline(LocalDateTime.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)));
         return goalRepository.save(goal);
     }
-    public Goal setGoalName(Goal goal, String name){
-        goal.setGoalName(name);
-        return goalRepository.save(goal);
+    public void setGoal(Goal goal, String name){
+        goal.setGoal(name);
+        goalRepository.save(goal);
     }
-    public Goal setGoalDescription(Goal goal, String description){
-        goal.setDescription(description);
-        return goalRepository.save(goal);
-    }
-    public Goal setGoalDeadline(Goal goal, LocalDateTime deadline){
+    public void setGoalDeadline(Goal goal, LocalDateTime deadline){
         goal.setDeadline(deadline);
-        return goalRepository.save(goal);
+        goalRepository.save(goal);
     }
-    public Goal setGoalReward(Goal goal, String reward){
+    public void setGoalReward(Goal goal, String reward){
         goal.setReward(reward);
-        return goalRepository.save(goal);
+        goalRepository.save(goal);
     }
 
     public List<Goal> getAllGoals(Long userId, boolean pendingOrAll) {
@@ -85,12 +72,20 @@ public class GoalService {
     }
 
     public Goal getGoalById(Long goalId){
+        if (goalId == null){
+            return null;
+        }
         return goalRepository.findById(goalId).orElse(null);
     }
 
     public void changeGoalCompletion(Goal goal) {
         goal.setCompleted(!goal.getCompleted());
         goalRepository.save(goal);
+    }
+
+    public boolean isThereAnyGoals(Long userId){
+        var goals = getAllGoals(userId, false);
+        return !goals.isEmpty();
     }
 
 
@@ -115,29 +110,6 @@ public class GoalService {
                 // Берем топ-5
                 .limit(5)
                 // Собираем пары в отсортированную карту
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey, // Ключ - пользователь
-                        Map.Entry::getValue, // Значение - процент
-                        (e1, e2) -> e1, // В случае дубликата оставляем первый элемент (не должно быть дубликатов)
-                        LinkedHashMap::new // Используем LinkedHashMap для сохранения порядка
-                ));
-    }
-
-    public Map<User, Double> getTop5UsersInGroupFromSQLQuery(GroupChat groupChat) {
-        // Получаем топ-5 пользователей с процентами выполнения целей
-        Pageable pageable = PageRequest.of(0, 5);
-        List<Object[]> results = goalRepository.findTop5UsersWithCompletionRate(groupChat, pageable);
-
-        // Преобразуем список результатов в карту пользователей и процентов
-        return results.stream()
-                .map(result -> {
-                    Long userId = (Long) result[0];
-                    double percent = ((Number) result[1]).doubleValue();
-                    User user = userRepository.findById(userId).orElse(null);
-                    return new AbstractMap.SimpleEntry<>(user, percent);
-                })
-                .filter(entry -> entry.getKey() != null)
-                // Собираем пары в Map
                 .collect(Collectors.toMap(
                         Map.Entry::getKey, // Ключ - пользователь
                         Map.Entry::getValue, // Значение - процент

@@ -1,5 +1,6 @@
 package org.baattezu.telegrambotdemo.bot.commands.goals;
 
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.baattezu.telegrambotdemo.bot.commands.Command;
@@ -26,33 +27,28 @@ public class GetMyGoalsCommand implements Command {
 
     @Override
     public SendMessage execute(Update update) {
-        var userId = update.getMessage().getFrom().getId();
-        var chatId = update.getMessage().getChatId();
+        var message = update.getMessage();
+        var userId = message.getFrom().getId();
+        var chatId = message.getChatId();
+        var isGroupMessage = message.isGroupMessage();
 
-        var message = new SendMessage();
-        message.setChatId(chatId);
-        
         var user = userService.findById(userId);
         if (user == null) {
-            return TelegramBotHelper.messageWithDeleteOption(
-                    BotMessagesEnum.REGISTER_BEFORE_GET_GOAL_MESSAGE.getMessage(), update, true
-            );
+            return TelegramBotHelper.registerBeforeMessage(chatId,"работать с целями.");
         }
-        var myGoals = goalService.getAllGoals(userId, true);
-        var response = new StringBuilder(
-                BotMessagesEnum.MY_GOALS_ON_THIS_WEEK.getMessage(
-                        "невыполненные"
-                ));
-        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
+        var myGoals = goalService.getAllGoals(userId, false);
 
-        TelegramBotHelper.setAllGoalsResponseAndKeyboard(response, myGoals, keyboard,true);
+        var whoseGoals = isGroupMessage ?
+                BotMessagesEnum.GOALS_OF_USER_THIS_WEEK.getMessage(userId, userId, user.getUsername()):
+                BotMessagesEnum.MY_GOALS_ON_THIS_WEEK.getMessage();
+        var response = new StringBuilder(whoseGoals);
 
-        var markup = new InlineKeyboardMarkup();
-        markup.setKeyboard(keyboard);
-
-        message.setText(response.toString());
-        message.setParseMode("Markdown");
-        message.setReplyMarkup(markup);  // Устанавливаем разметку с кнопками
-        return message;
+        var sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.enableHtml(true);
+        sendMessage.setReplyMarkup(TelegramBotHelper
+                .setAllGoalsResponseAndKeyboard(response, myGoals,1, isGroupMessage));  // Устанавливаем разметку с кнопками
+        sendMessage.setText(response.toString());
+        return sendMessage;
     }
 }

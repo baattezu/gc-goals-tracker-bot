@@ -6,12 +6,14 @@ import org.baattezu.telegrambotdemo.data.CallbackType;
 import org.baattezu.telegrambotdemo.model.User;
 import org.baattezu.telegrambotdemo.results.ScheduledResultsGenerator;
 import org.baattezu.telegrambotdemo.utils.JsonHandler;
+import org.baattezu.telegrambotdemo.utils.keyboard.Markup;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.yaml.snakeyaml.error.Mark;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,37 +33,14 @@ public class Top5Results implements Command {
         return message;
     }
     private void addButtons(String chatId, SendMessage sendMessage){
-        List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
-        List<InlineKeyboardButton> rowInline1 = new ArrayList<>();
-        List<InlineKeyboardButton> rowInline2 = new ArrayList<>();
-        List<InlineKeyboardButton> rowInline3 = new ArrayList<>();
+        var topUsers = resultsGenerator.getTop5UsersInGroup(chatId);
+        InlineKeyboardButton[] buttons = new InlineKeyboardButton[topUsers.size()];
         int index = 1;
-        for (Map.Entry<User, Double> entry : resultsGenerator.getTop5UsersInGroup(chatId)) {
+        for (Map.Entry<User, Double> entry : topUsers) {
             User user = entry.getKey();
-
-            // Создаем кнопку для каждого пользователя
-            InlineKeyboardButton button = new InlineKeyboardButton();
-//            button.setText("Посмотреть "+ index + "# " + user.getUsername());
-            button.setText(index + "#");
-            String jsonCallback = JsonHandler.toJson(List.of(CallbackType.VIEW_USER_RESULTS_FROM_TOP, user.getId()));
-            button.setCallbackData(jsonCallback); // Уникальный идентификатор для коллбэка
-
-            // Добавляем кнопку в ряд
-            List<InlineKeyboardButton> rowInline = new ArrayList<>();
-            if (index > 50){
-                rowInline3.add(button);
-            } else if (index > 69) {
-                rowInline2.add(button);
-            } else {
-                rowInline1.add(button);
-            }
+            buttons[index] = Markup.Button.create(index + "#", CallbackType.VIEW_USER_RESULTS_FROM_TOP, user.getId() + ":" + index);
             index++;
         }
-        keyboard.add(rowInline1);
-        keyboard.add(rowInline2);
-        keyboard.add(rowInline3);
-        var markupInline = new InlineKeyboardMarkup();
-        markupInline.setKeyboard(keyboard);
-        sendMessage.setReplyMarkup(markupInline);
+        sendMessage.setReplyMarkup(Markup.keyboard().addRow(buttons).build());
     }
 }

@@ -25,7 +25,7 @@ public class DeleteMessageCallback implements CallbackHandler {
         deleteMessageFromBot.setMessageId(botMessageId);
         deleteMessages.add(deleteMessageFromBot);
 
-        if (callback.getData() != null){
+        if (!callback.getData().equals("nothing")){
             var deleteMessageFromUser = new DeleteMessage();
             deleteMessageFromUser.setChatId(chatId);
             deleteMessageFromUser.setMessageId(Integer.valueOf(callback.getData()));

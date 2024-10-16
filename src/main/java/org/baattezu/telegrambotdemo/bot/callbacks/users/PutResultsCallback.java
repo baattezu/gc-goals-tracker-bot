@@ -14,22 +14,22 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 @Component
 @RequiredArgsConstructor
 public class PutResultsCallback implements CallbackHandler {
-    private final UserService userService;
     private final GoalService goalService;
 
     @Override
     public Object execute(Callback callback, Update update) {
-        var chatId = update.getCallbackQuery().getMessage().getChatId();
         var userId = update.getCallbackQuery().getFrom().getId();
+        var message = update.getCallbackQuery().getMessage();
+        var chatId = message.getChatId();
+        var text = message.getText();
 
-        goalService.setUserState(userId, UserState.WAITING_FOR_RESULTS, Long.valueOf(update.getCallbackQuery().getMessage().getMessageId()));
+        var newText = text + "\n\n⏳ Ожидаем ваш новый результат...";
+        goalService.setUserState(userId, UserState.WAITING_FOR_RESULTS, Long.valueOf(message.getMessageId()));
 
         var editMessage = new EditMessageText();
         editMessage.setChatId(chatId);
-        var newText = update.getCallbackQuery().getMessage().getText() + "\n\n⏳ Ожидаем ваш новый результат...";
         editMessage.setText(newText);
         editMessage.setMessageId(update.getCallbackQuery().getMessage().getMessageId());
-        editMessage.setReplyMarkup(update.getCallbackQuery().getMessage().getReplyMarkup());
         return editMessage;
     }
 }

@@ -17,20 +17,24 @@ public class GetAllUsersFromThisChatCommand implements Command {
 
     @Override
     public SendMessage execute(Update update) {
-        var chatId = update.getMessage().getChatId();
+        var message = update.getMessage();
+        var chatId = message.getChatId();
+        if (!message.isGroupMessage()){
+            return null;
+        }
         var chat = chatService.findById(chatId);
         var userList = userService.getAllUsersFromGroupChat(chat);
 
-        var message = new SendMessage();
-        message.setChatId(chatId);
         int index = 1;
-        StringBuilder usersText = new StringBuilder("Список прикрепленных пользователей в этой группе: \n");
+        var usersText = new StringBuilder("Список прикрепленных пользователей в этой группе: \n");
         for (User user : userList){
             usersText.append(index).append(". ").append(user.getUsername()).append(" \n");
             index++;
         }
 
-        message.setText(usersText.toString());
-        return message;
+        var sendMessage = new SendMessage();
+        sendMessage.setChatId(chatId);
+        sendMessage.setText(usersText.toString());
+        return sendMessage;
     }
 }

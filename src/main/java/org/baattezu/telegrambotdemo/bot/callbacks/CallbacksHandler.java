@@ -4,15 +4,17 @@ import lombok.extern.slf4j.Slf4j;
 //import org.baattezu.telegrambotdemo.bot.callbacks.goal_creation.SetGoalCallback;
 import org.baattezu.telegrambotdemo.bot.callbacks.goals.*;
 import org.baattezu.telegrambotdemo.bot.callbacks.message.DeleteMessageCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.results.ViewResultsCallback;
 import org.baattezu.telegrambotdemo.bot.callbacks.users.PinToChatFromWelcomeMessageCallback;
 import org.baattezu.telegrambotdemo.bot.callbacks.users.PutResultsCallback;
+import org.baattezu.telegrambotdemo.bot.callbacks.users.StartWorkCallback;
 import org.baattezu.telegrambotdemo.data.CallbackType;
-import org.baattezu.telegrambotdemo.service.UserService;
 import org.baattezu.telegrambotdemo.utils.JsonHandler;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,31 +22,27 @@ import java.util.Map;
 @Component
 @Slf4j
 public class CallbacksHandler {
-
-    private final UserService userService;
     private final Map<CallbackType, CallbackHandler> callbacks;
 
     public CallbacksHandler(
-            UserService userService, StartGoalCreationCallback setGoalCallback,
-            EnterDeadlineCallback enterDeadlineCallback,
-            CompleteGoalCallback completeGoalCallback,
             JustCallback justCallback,
             DeleteMessageCallback deleteMessageCallback,
             PinToChatFromWelcomeMessageCallback pinToChatFromWelcomeMessageCallback,
             PutResultsCallback putResultsCallback,
-            CompleteInAllGoalsCallback completeInAllGoalsCallback
+            ViewResultsCallback viewResultsCallback,
+            CompleteInAllGoalsCallback completeInAllGoalsCallback,
+            NavigationCallback nextGoalPageCallback,
+            StartWorkCallback startWorkCallback
     ) {
-        this.userService = userService;
-        this.callbacks = Map.of(
-                CallbackType.SET_GOAL, setGoalCallback,
-                CallbackType.ENTER_DEADLINE, enterDeadlineCallback,
-                CallbackType.COMPLETE_GOAL, completeGoalCallback,
-                CallbackType.COMPLETE_IN_ALL_GOALS, completeInAllGoalsCallback,
-                CallbackType.GO_TO_PRIVATE_CHAT, justCallback,
-                CallbackType.DELETE_LAST_MESSAGES, deleteMessageCallback,
-                CallbackType.PIN_TO_CHAT, pinToChatFromWelcomeMessageCallback,
-                CallbackType.PUT_RESULTS, putResultsCallback
-        );
+        this.callbacks = new HashMap<>();
+        callbacks.put(CallbackType.VIEW_USER_RESULTS_FROM_TOP, viewResultsCallback);
+        callbacks.put(CallbackType.COMPLETE_IN_ALL_GOALS, completeInAllGoalsCallback);
+        callbacks.put(CallbackType.GO_TO_PRIVATE_CHAT, justCallback);
+        callbacks.put(CallbackType.DELETE_LAST_MESSAGES, deleteMessageCallback);
+        callbacks.put(CallbackType.PIN_TO_CHAT, pinToChatFromWelcomeMessageCallback);
+        callbacks.put(CallbackType.PUT_RESULTS, putResultsCallback);
+        callbacks.put(CallbackType.NEXT_PAGE, nextGoalPageCallback);
+        callbacks.put(CallbackType.START_WORK_WITH_BOT, startWorkCallback);
     }
 
     public Object handleCallbacks(Update update) {
