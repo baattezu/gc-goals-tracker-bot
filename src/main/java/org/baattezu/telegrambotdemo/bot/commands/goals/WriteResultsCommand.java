@@ -3,6 +3,7 @@ package org.baattezu.telegrambotdemo.bot.commands.goals;
 
 import lombok.RequiredArgsConstructor;
 import org.baattezu.telegrambotdemo.bot.commands.Command;
+import org.baattezu.telegrambotdemo.config.BotConfig;
 import org.baattezu.telegrambotdemo.data.CallbackType;
 import org.baattezu.telegrambotdemo.service.GoalService;
 import org.baattezu.telegrambotdemo.service.UserService;
@@ -22,23 +23,26 @@ import java.util.List;
 @RequiredArgsConstructor
 public class WriteResultsCommand implements Command {
 
-    @Value("${telegram.bot.url}")
-    private String botUrl;
+
+    private final BotConfig botConfig;
     private final UserService userService;
 
     @Override
     public SendMessage execute(Update update) {
         long chatId = update.getMessage().getChatId();
         var user = userService.findById(update.getMessage().getFrom().getId());
+
+        if (update.getMessage().isGroupMessage()){
+            return TelegramBotHelper.justGoToPrivateMessage(chatId, BotMessagesEnum.PUT_RESULTS.getMessage());
+        }
+
         var message = new SendMessage(
                 String.valueOf(chatId),
                 BotMessagesEnum.MY_RESULTS.getMessage(user.getResultsForWeek())
         );
-        if (update.getMessage().isGroupMessage()){
-            return TelegramBotHelper.justGoToPrivateMessage(chatId, BotMessagesEnum.PUT_RESULTS.getMessage(botUrl), botUrl);
-        }
         message.setReplyMarkup(Markup.keyboard().addRow(
-                Markup.Button.create("Переписать результаты за неделю", CallbackType.PUT_RESULTS, String.valueOf(user.getId()))
+                Markup.Button.create("Переписать результаты", CallbackType.PUT_RESULTS, String.valueOf(user.getId())),
+                Markup.Button.create("Ok", CallbackType.DELETE_LAST_MESSAGES, "nothing")
         ).build());
         return message;
     }

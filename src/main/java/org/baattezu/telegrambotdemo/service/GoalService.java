@@ -1,15 +1,12 @@
 package org.baattezu.telegrambotdemo.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.baattezu.telegrambotdemo.data.UserGoalData;
 import org.baattezu.telegrambotdemo.data.UserState;
 import org.baattezu.telegrambotdemo.model.Goal;
-import org.baattezu.telegrambotdemo.model.GroupChat;
 import org.baattezu.telegrambotdemo.model.User;
 import org.baattezu.telegrambotdemo.repository.GoalRepository;
-import org.baattezu.telegrambotdemo.repository.UserRepository;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
@@ -20,22 +17,32 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class GoalService {
 
     private final GoalRepository goalRepository;
     private final Map<Long, UserGoalData> userStates = new HashMap<>();
 
     public void setUserState(Long userId, UserState state, Long goalId) {
+        UserGoalData currentData = userStates.getOrDefault(userId, null);
+        // Если пользователь уже находится в определенном состоянии, можно отклонить изменение
+        if (currentData != null && currentData.userState() != state) {
+            // Логика отказа или предупреждение пользователю
+            throw new RuntimeException("Смена состояний недопустима");
+        }
         UserGoalData userGoalData = new UserGoalData(state, goalId);
         userStates.put(userId, userGoalData);
     }
+
     public UserGoalData getUserState(Long userId) {
         return userStates.getOrDefault(userId, null);
     }
+
     public void clearUserState(Long userId) {
         userStates.remove(userId);
     }
-    public void clearGoalsForWeek(User user){
+
+    public void clearGoalsForWeek(User user) {
         goalRepository.deleteAllByUser(user);
     }
 
@@ -48,31 +55,32 @@ public class GoalService {
         goal.setDeadline(LocalDateTime.now().with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY)));
         return goalRepository.save(goal);
     }
-    public void setGoal(Goal goal, String name){
+
+    public void setGoal(Goal goal, String name) {
         goal.setGoal(name);
         goalRepository.save(goal);
     }
-    public void setGoalDeadline(Goal goal, LocalDateTime deadline){
+
+    public void setGoalDeadline(Goal goal, LocalDateTime deadline) {
         goal.setDeadline(deadline);
         goalRepository.save(goal);
     }
-    public void setGoalReward(Goal goal, String reward){
+
+    public void setGoalReward(Goal goal, String reward) {
         goal.setReward(reward);
         goalRepository.save(goal);
     }
 
-    public List<Goal> getAllGoals(Long userId, boolean pendingOrAll) {
-        var goalList = pendingOrAll ?
-                goalRepository.findByUserIdAndCompletedFalse(userId) :
-                goalRepository.findByUserId(userId);
+    public List<Goal> getAllGoals(Long userId) {
+        var goalList = goalRepository.findByUserIdAndDeadlineForCurrentWeek(userId);
         goalList.sort(Comparator
                 .comparing(Goal::getCreatedAt)              // Сначала по дате
                 .thenComparing(Goal::getCompleted));
         return goalList;
     }
 
-    public Goal getGoalById(Long goalId){
-        if (goalId == null){
+    public Goal getGoalById(Long goalId) {
+        if (goalId == null) {
             return null;
         }
         return goalRepository.findById(goalId).orElse(null);
@@ -83,8 +91,8 @@ public class GoalService {
         goalRepository.save(goal);
     }
 
-    public boolean isThereAnyGoals(Long userId){
-        var goals = getAllGoals(userId, false);
+    public boolean isThereAnyGoals(Long userId) {
+        var goals = getAllGoals(userId);
         return !goals.isEmpty();
     }
 
@@ -93,7 +101,7 @@ public class GoalService {
         return users.stream()
                 // Преобразуем пользователя в пару (пользователь, процент)
                 .map(u -> {
-                    var allGoalList = getAllGoals(u.getId(), false);
+                    var allGoalList = getAllGoals(u.getId());
                     var completedGoals = allGoalList.stream().filter(Goal::getCompleted).toList();
 
                     long countCompletedGoals = completedGoals.size();

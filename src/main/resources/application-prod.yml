@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://db-for-bot:5432/groupgoalsbot?currentSchema=boot
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: validate  # Только проверка схемы, не изменяем на проде
+    show-sql: false  # На проде SQL-запросы не выводим в лог
+

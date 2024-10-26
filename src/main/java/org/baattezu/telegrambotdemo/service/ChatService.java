@@ -5,10 +5,9 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.baattezu.telegrambotdemo.model.GroupChat;
 import org.baattezu.telegrambotdemo.repository.ChatRepository;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,7 +26,8 @@ public class ChatService {
         List<GroupChat> chatList = chatRepository.findAll();
         groupChatIds = chatList.stream().map(GroupChat::getId).collect(Collectors.toSet());
     }
-    public GroupChat findById(Long id){
+
+    public GroupChat findById(Long id) {
         return chatRepository.findById(id).orElseThrow(
                 () -> new RuntimeException("Such group not included in supported groups.")
         );
@@ -37,14 +37,15 @@ public class ChatService {
         return groupChatIds.contains(chatId);
     }
 
-    public GroupChat createGroupChat(Long id, String chatName){
+    public GroupChat createGroupChat(Long id, String chatName) {
         GroupChat chat = new GroupChat();
         chat.setId(id);
         chat.setName(chatName);
         groupChatIds.add(chat.getId());
         return chatRepository.save(chat);
     }
-    public List<GroupChat> getAllChats(){
+
+    public List<GroupChat> getAllChats() {
         return chatRepository.findAll();
     }
 }

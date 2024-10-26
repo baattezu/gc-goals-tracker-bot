@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.baattezu.telegrambotdemo.bot.commands.Command;
 import org.baattezu.telegrambotdemo.results.ProgressImageGenerator;
 import org.baattezu.telegrambotdemo.service.UserService;
+import org.baattezu.telegrambotdemo.utils.TelegramBotHelper;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -28,6 +29,7 @@ public class GetPhoto implements Command {
         } else {
             sendMessage.setText(formatTable(message.getChatId().toString(), true));
         }
+        sendMessage.setReplyMarkup(TelegramBotHelper.okButton());
         sendMessage.enableMarkdown(true);
         return sendMessage;
     }

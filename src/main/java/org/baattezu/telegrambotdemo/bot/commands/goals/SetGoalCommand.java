@@ -3,6 +3,7 @@ package org.baattezu.telegrambotdemo.bot.commands.goals;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.baattezu.telegrambotdemo.bot.commands.Command;
+import org.baattezu.telegrambotdemo.config.BotConfig;
 import org.baattezu.telegrambotdemo.data.CallbackType;
 import org.baattezu.telegrambotdemo.data.UserState;
 import org.baattezu.telegrambotdemo.model.Goal;
@@ -28,9 +29,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SetGoalCommand implements Command {
 
-    @Value("${telegram.bot.url}")
-    private String botUrl;
-
     private final UserService userService;
     private final GoalService goalService;
 
@@ -43,7 +41,7 @@ public class SetGoalCommand implements Command {
         String text = null;
 
         if (update.getMessage().isGroupMessage()){
-            return TelegramBotHelper.justGoToPrivateMessage(chatId, BotMessagesEnum.SET_GOAL_TO_PRIVATE_MESSAGE.getMessage(botUrl), botUrl);
+            return TelegramBotHelper.justGoToPrivateMessage(chatId, BotMessagesEnum.SET_GOAL_TO_PRIVATE_MESSAGE.getMessage());
         }
 
         User user = userService.findById(userId);
