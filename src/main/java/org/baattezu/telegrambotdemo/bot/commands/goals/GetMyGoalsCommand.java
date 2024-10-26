@@ -36,7 +36,7 @@ public class GetMyGoalsCommand implements Command {
         if (user == null) {
             return TelegramBotHelper.registerBeforeMessage(chatId,"работать с целями.");
         }
-        var myGoals = goalService.getAllGoals(userId, false);
+        var myGoals = goalService.getAllGoals(userId);
 
         var whoseGoals = isGroupMessage ?
                 BotMessagesEnum.GOALS_OF_USER_THIS_WEEK.getMessage(userId, userId, user.getUsername()):

@@ -7,6 +7,7 @@ import org.baattezu.telegrambotdemo.bot.commands.results.GetPhoto;
 import org.baattezu.telegrambotdemo.bot.commands.results.Top5Results;
 import org.baattezu.telegrambotdemo.bot.commands.users.CheckInCommand;
 import org.baattezu.telegrambotdemo.bot.commands.users.ChangeNameCommand;
+import org.baattezu.telegrambotdemo.bot.commands.users.HelpCommand;
 import org.baattezu.telegrambotdemo.bot.commands.users.StartCommand;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -31,7 +32,8 @@ public class CommandsHandler {
             GetAllUsersFromThisChatCommand getAllUsersFromThisChatCommand,
             WriteResultsCommand writeResultsCommand,
             GetPhoto getPhoto,
-            Top5Results top5results
+            Top5Results top5results,
+            HelpCommand helpCommand
     ) {
         this.commands = new HashMap<>();
         this.commands.put("/start", startCommand);
@@ -44,6 +46,7 @@ public class CommandsHandler {
         this.commands.put("/results", writeResultsCommand);
         this.commands.put("/progress", getPhoto);
         this.commands.put("/top5", top5results);
+        this.commands.put("/help", helpCommand);
     }
 
     public Object handleCommand(Update update) {

@@ -31,14 +31,12 @@ public class NavigationCallback implements CallbackHandler {
         var userId = !isGroupMessage ?
                 update.getCallbackQuery().getFrom().getId() : Long.valueOf(userIdAndUsernameFromGroupMessage[0]);
         var currentPage = Integer.parseInt(callback.getData());
-        var myGoals = goalService.getAllGoals(userId, false);
+        var myGoals = goalService.getAllGoals(userId);
         var whoseGoals = isGroupMessage ?
                 BotMessagesEnum.GOALS_OF_USER_THIS_WEEK.getMessage(
                         userId, userId, userIdAndUsernameFromGroupMessage[1].trim()) :
                 BotMessagesEnum.MY_GOALS_ON_THIS_WEEK.getMessage();
         var response = new StringBuilder(whoseGoals);
-
-        log.info(chatId.toString());
         var editMessage = new EditMessageText();
         editMessage.setChatId(chatId);
         editMessage.setMessageId(messageId);

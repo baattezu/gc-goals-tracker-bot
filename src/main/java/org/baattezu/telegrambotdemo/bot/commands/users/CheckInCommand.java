@@ -41,9 +41,7 @@ public class CheckInCommand implements Command {
         var message = new SendMessage();
         message.setChatId(chatId);
         message.setText(BotMessagesEnum.CHECKIN_MESSAGE.getMessage(checkIn.getCheckInTime()));
-        message.setReplyMarkup(Markup.keyboard()
-                .addRow(Markup.Button.create("Ок", CallbackType.DELETE_LAST_MESSAGES, String.valueOf(update.getMessage().getMessageId())))
-                .build());
+        message.setReplyMarkup(TelegramBotHelper.okButton());
         return message;
     }
 }

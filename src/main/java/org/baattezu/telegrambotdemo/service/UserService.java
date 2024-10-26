@@ -30,9 +30,10 @@ public class UserService {
         newUser.setGroupChat(null);
         return userRepository.save(newUser);
     }
+
     @Transactional
-    public User changeName(User user, String newName) {
-        log.info("Changing username from {} to {}", user.getUsername(), newName);
+    public User changeName(Long userId, String newName) {
+        var user = findById(userId);
         user.setUsername(newName);
         return userRepository.save(user);
     }

@@ -1,0 +1,10 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5438/groupgoalsbot?currentSchema=boot
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update  # На dev можно изменять схему
+    show-sql: false  # Показывать SQL-запросы для отладки
+

@@ -5,6 +5,7 @@ import org.baattezu.telegrambotdemo.bot.commands.Command;
 import org.baattezu.telegrambotdemo.model.User;
 import org.baattezu.telegrambotdemo.service.ChatService;
 import org.baattezu.telegrambotdemo.service.UserService;
+import org.baattezu.telegrambotdemo.utils.TelegramBotHelper;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
@@ -35,6 +36,7 @@ public class GetAllUsersFromThisChatCommand implements Command {
         var sendMessage = new SendMessage();
         sendMessage.setChatId(chatId);
         sendMessage.setText(usersText.toString());
+        sendMessage.setReplyMarkup(TelegramBotHelper.okButton());
         return sendMessage;
     }
 }

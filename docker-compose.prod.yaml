@@ -1,0 +1,39 @@
+services:
+  # Сервис для PostgreSQL
+  db-for-bot:
+    image: postgres:16
+    ports:
+      - 5438:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: groupgoalsbot
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - bot-network
+
+  # Сервис для приложения
+  bot-app:
+    image: docker.io/baattezu/telegram-bot-demo:latest
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod  # Активируем нужный профиль
+      TELEGRAM_BOT_URL: "https://t.me/groupgoals_bot"
+      TELEGRAM_BOT_NAME: "goalbot"
+      TELEGRAM_BOT_TOKEN: "7391568163:AAGKixgnapRdXHE4j2K7kQUetEq-BexHuiw"
+
+    depends_on:
+      - db-for-bot
+    networks:
+      - bot-network
+
+networks:
+  bot-network:
+    driver: bridge
+
+volumes:
+  postgres-data:

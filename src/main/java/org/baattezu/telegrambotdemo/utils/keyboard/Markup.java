@@ -13,7 +13,8 @@ public class Markup {
 
     private final List<List<InlineKeyboardButton>> keyboard = new ArrayList<>();
 
-    private Markup() {}
+    private Markup() {
+    }
 
     public static Markup keyboard() {
         return new Markup();
@@ -40,6 +41,7 @@ public class Markup {
             this.button.setText(text);
             this.button.setCallbackData(JsonHandler.toJson(List.of(callbackType, data)));
         }
+
         private Button(String text, String url, CallbackType callbackType, String data) {
             this.button = new InlineKeyboardButton();
             this.button.setText(text);
@@ -50,6 +52,7 @@ public class Markup {
         public static InlineKeyboardButton create(String text, CallbackType callbackType, String data) {
             return new Button(text, callbackType, data).button;
         }
+
         public static InlineKeyboardButton create(String text, String botUrl, CallbackType callbackType, String data) {
             return new Button(text, botUrl, callbackType, data).button;
         }

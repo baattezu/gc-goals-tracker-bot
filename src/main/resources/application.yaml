@@ -8,14 +8,10 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    show-sql: false
   flyway:
     enabled: true
     locations: classpath:db/migration
     schemas: boot
-
-telegram:
-  bot:
-    token: 7391568163:AAGKixgnapRdXHE4j2K7kQUetEq-BexHuiw
-    name: goalbot
-    url: https://t.me/groupgoals_bot
+  profiles:
+    active: dev

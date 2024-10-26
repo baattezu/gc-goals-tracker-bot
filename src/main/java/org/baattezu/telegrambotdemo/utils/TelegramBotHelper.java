@@ -3,17 +3,18 @@ package org.baattezu.telegrambotdemo.utils;
 import org.baattezu.telegrambotdemo.data.CallbackType;
 import org.baattezu.telegrambotdemo.model.Goal;
 import org.baattezu.telegrambotdemo.utils.keyboard.Markup;
-import org.telegram.telegrambots.meta.api.methods.BotApiMethod;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
-import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.InlineKeyboardButton;
-import org.yaml.snakeyaml.error.Mark;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardButton;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.baattezu.telegrambotdemo.config.BotConfig.BOT_URL;
 
 public class TelegramBotHelper {
 
@@ -42,15 +43,19 @@ public class TelegramBotHelper {
         // Добавляем цели текущей страницы
         for (int i = startIndex; i < endIndex; i++) {
             Goal goal = myGoals.get(i);
+            var goalName = goal.getGoal();
+            var reward = goal.getReward();
+            goalName = (goalName.length() > 900) ? goalName.substring(0, 900) + "..." : goalName;
+            reward = (reward.length() > 900) ? reward.substring(0, 900) + "..." : reward;
 
             response.append("<blockquote expandable>");
             var status = goal.getCompleted() ? "✅" : "";
             response.append(BotMessagesEnum.GET_GOAL_DETAIL_MESSAGE_VER1.getMessage(
-                    index, status, goal.getGoal(), goal.getReward()
+                    index, status, goalName, reward
             ));
             if (!isGroupChat) {
                 var text = "#" + index + " " + (goal.getCompleted() ? "❌" : "⭕");
-                currentRow.add(Markup.Button.create(text, CallbackType.COMPLETE_IN_ALL_GOALS,  goal.getId() + ":" + currentPage));
+                currentRow.add(Markup.Button.create(text, CallbackType.COMPLETE_IN_ALL_GOALS, goal.getId() + ":" + currentPage));
                 // Добавляем текущий ряд в клавиатуру, если он заполнен или если это последний элемент
                 if (currentRow.size() == 4 || i == endIndex - 1) {
                     keyboard.add(new ArrayList<>(currentRow));
@@ -93,30 +98,18 @@ public class TelegramBotHelper {
         return markup;
     }
 
-    public static SendMessage justGoToPrivateMessage(Long chatId, String botMessageText, String botUrl) {
+    public static SendMessage justGoToPrivateMessage(Long chatId, String botMessageText) {
         var message = new SendMessage();
         message.setChatId(chatId);
         message.setText(botMessageText);
-        message.setReplyMarkup( Markup.keyboard().addRow(
-                Markup.Button.create("Перейти в личку", botUrl, CallbackType.GO_TO_PRIVATE_CHAT, "someDate"),
+        message.setReplyMarkup(Markup.keyboard().addRow(
+                Markup.Button.create("Перейти в личку", BOT_URL, CallbackType.GO_TO_PRIVATE_CHAT, "someDate"),
                 Markup.Button.create("Ok", CallbackType.DELETE_LAST_MESSAGES, "nothing")
         ).build());
         message.enableMarkdown(true);
         return message;
     }
 
-    public static SendMessage messageWithDeleteOption(String botMessageText, Update update, boolean deleteUserMessageOrNot) {
-        var message = new SendMessage();
-        var messageId = update.getMessage().getMessageId();
-        message.setChatId(update.getMessage().getChatId());
-        message.setText(botMessageText);
-        message.setReplyMarkup(Markup.keyboard().addRow(
-                Markup.Button.create("Ok", CallbackType.DELETE_LAST_MESSAGES, "nothing")
-        ).build());
-        message.enableMarkdown(true);
-        message.setReplyToMessageId(messageId);
-        return message;
-    }
     public static SendMessage registerBeforeMessage(Long chatId, String before) {
         var message = new SendMessage();
         message.setChatId(chatId);
@@ -128,12 +121,48 @@ public class TelegramBotHelper {
         return message;
     }
 
-    public static DeleteMessage deletePreviousUserMessage(Update update){
-        var deleteMessage = new DeleteMessage();
-        deleteMessage.setMessageId(update.getMessage().getMessageId());
-        deleteMessage.setChatId(update.getMessage().getChatId());
-        return deleteMessage;
+    public static void setMainMenuKeyboard(SendMessage sendMessage) {
+        // Создаем клавиатуру
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        replyKeyboardMarkup.setSelective(true);
+        replyKeyboardMarkup.setResizeKeyboard(true); // Клавиатура будет адаптироваться под экран
+        replyKeyboardMarkup.setOneTimeKeyboard(false); // Клавиатура останется открытой
+
+        // Создаем список строк с кнопками
+        List<KeyboardRow> keyboard = new ArrayList<>();
+
+        // Создаем первую строку клавиатуры с кнопками
+        KeyboardRow row1 = new KeyboardRow();
+        row1.add(new KeyboardButton("/set_goal"));
+        row1.add(new KeyboardButton("/goals"));
+
+        // Создаем вторую строку
+        KeyboardRow row2 = new KeyboardRow();
+        row2.add(new KeyboardButton("/progress"));
+        row2.add(new KeyboardButton("/results"));
+
+        // Добавляем строки клавиатуры
+        keyboard.add(row1);
+        keyboard.add(row2);
+
+        // Устанавливаем клавиатуру в объект
+        replyKeyboardMarkup.setKeyboard(keyboard);
+
+        // Присоединяем клавиатуру к сообщению
+        sendMessage.setReplyMarkup(replyKeyboardMarkup);
     }
 
+    public static InlineKeyboardMarkup okButton() {
+        return Markup.keyboard()
+                .addRow(Markup.Button.create("Ok", CallbackType.DELETE_LAST_MESSAGES, "nothing"))
+                .build();
+    }
+
+    public static DeleteMessage deleteMessage(long chatId, long messageId) {
+        DeleteMessage deleteMessage = new DeleteMessage();
+        deleteMessage.setChatId(chatId);
+        deleteMessage.setMessageId((int) messageId);
+        return deleteMessage;
+    }
 
 }

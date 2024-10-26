@@ -17,8 +17,11 @@ import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageReplyMarkup;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ForceReplyKeyboard;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.InlineKeyboardMarkup;
+import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboard;
 import org.yaml.snakeyaml.error.Mark;
 
 import java.time.LocalDateTime;
@@ -39,80 +42,120 @@ public class UserInputHandlerWithoutDate {
         var message = update.getMessage();
         long userId = message.getFrom().getId();
         long chatId = message.getChatId();
-        int replyMessageId = message.getReplyToMessage() != null ? message.getReplyToMessage().getMessageId() : 0;
+        int replyMessageId = getReplyMessageId(message);
         String messageText = message.getText();
 
-        // Получаем текущее состояние пользователя
         UserGoalData data = goalService.getUserState(userId);
         UserState state = data.userState();
 
         List<BotApiMethod> botApiMethodList = new ArrayList<>();
-        long goalId = data.goalId();
+        botApiMethodList.add(TelegramBotHelper.deleteMessage(chatId, message.getMessageId()));
+        if (message.getReplyToMessage() != null){
+            botApiMethodList.add(deleteMessageFromReply(chatId, replyMessageId));
+        }
 
+        long goalId = data.goalId();
         Goal goal = goalService.getGoalById(goalId);
+
         switch (state) {
             case WAITING_FOR_TITLE:
-                goalService.setGoal(goal, messageText);
-                goalService.setUserState(userId, UserState.WAITING_FOR_REWARD, data.goalId());
-                var rewardMessage = new SendMessage(String.valueOf(chatId), "✨ Пожалуйста, опишите желаемое вознаграждение.");
-                rewardMessage.setReplyMarkup(new ForceReplyKeyboard());
-                botApiMethodList.add(rewardMessage);
-                botApiMethodList.add(deleteMessageFromReply(chatId, replyMessageId));
-
+                handleTitleState(goal, userId, chatId, replyMessageId, messageText, botApiMethodList);
                 break;
-
             case WAITING_FOR_REWARD:
-                // Сохраняем вознаграждение и заканчиваем
-                goalService.setGoalReward(goal, messageText);
-
-                var thisWeek = LocalDateTime.now().with(ChronoField.DAY_OF_WEEK, 7).withHour(23).withMinute(59);
-                goalService.setGoalDeadline(goal, thisWeek);
-
-                goalService.clearUserState(userId);  // Завершаем процесс
-                var goalMadeMessage = new SendMessage();
-                goalMadeMessage.setChatId(chatId);
-                goalMadeMessage.setText("🎯 Цель на неделю успешно создана! Успехов! 💪✨"+
-                        "<blockquote expandable>" +
-                        BotMessagesEnum.GET_GOAL_DETAIL_MESSAGE_VER1.getMessage(0, "", goal.getGoal(), goal.getReward()) +
-                        "</blockquote>");
-
-                goalMadeMessage.enableHtml(true);
-                goalMadeMessage.setReplyMarkup(Markup.keyboard()
-                        .addRow(Markup.Button.create("Ok", CallbackType.DELETE_LAST_MESSAGES, "nothing"))
-                        .build());
-                botApiMethodList.add(goalMadeMessage);
-                botApiMethodList.add(deleteMessageFromReply(chatId, replyMessageId));
+                handleRewardState(goal, userId, chatId, replyMessageId, messageText, botApiMethodList);
                 break;
             case WAITING_FOR_RESULTS:
-                // Сохраняем описание и переходим к дедлайну
-                userService.writeResultsForWeek(userId, messageText);
-                goalService.clearUserState(userId);  // Завершаем процесс
-
-                var editMessage = new EditMessageText();
-                editMessage.setText(BotMessagesEnum.MY_RESULTS.getMessage(messageText));
-                editMessage.setMessageId(Math.toIntExact(data.goalId()));
-                editMessage.setChatId(chatId);
-                editMessage.setReplyMarkup(Markup.keyboard().addRow(
-                        Markup.Button.create("Переписать результаты за неделю", CallbackType.PUT_RESULTS, String.valueOf(userId))
-                ).build());
-                botApiMethodList.add(editMessage);
+                handleResultsState(userId, chatId, messageText, data, botApiMethodList);
+                break;
+            case WAITING_FOR_CHANGING_NAME:
+                handleChangingNameState(userId, chatId, replyMessageId, messageText, botApiMethodList);
                 break;
             default:
-                var badResponseMessage = new SendMessage(String.valueOf(chatId), "Неизвестное состояние. Пожалуйста, начните сначала.");
-                botApiMethodList.add(badResponseMessage);
+                botApiMethodList.add(createSimpleMessage(chatId, "Неизвестное состояние. Пожалуйста, начните сначала."));
                 break;
         }
-        // Обрабатываем в зависимости от состояния
-        botApiMethodList.add(TelegramBotHelper.deletePreviousUserMessage(update));
         return botApiMethodList;
     }
 
-    private DeleteMessage deleteMessageFromReply(long chatId, long messageId){
-        DeleteMessage deleteMessage = new DeleteMessage();
-        deleteMessage.setChatId(chatId);
-        deleteMessage.setMessageId((int) messageId);
-        return deleteMessage;
+    private int getReplyMessageId(Message message) {
+        return message.getReplyToMessage() != null ? message.getReplyToMessage().getMessageId() : 0;
     }
+
+    private void handleChangingNameState(long userId, long chatId, int replyMessageId, String messageText, List<BotApiMethod> botApiMethodList) {
+        userService.changeName(userId, messageText);
+        goalService.clearUserState(userId);
+        var changeNameMadeMessage = new SendMessage();
+        changeNameMadeMessage.setChatId(chatId);
+        changeNameMadeMessage.setText(BotMessagesEnum.CHANGE_NAME_SUCCESS_MESSAGE.getMessage(messageText));
+        changeNameMadeMessage.setReplyMarkup(TelegramBotHelper.okButton());
+        botApiMethodList.add(changeNameMadeMessage);
+    }
+
+    private void handleTitleState(Goal goal, long userId, long chatId, int replyMessageId, String messageText, List<BotApiMethod> botApiMethodList) {
+        goalService.setGoal(goal, messageText);
+        goalService.clearUserState(userId);
+        goalService.setUserState(userId, UserState.WAITING_FOR_REWARD, goal.getId());
+//        botApiMethodList.add(deleteMessageFromReply(chatId, replyMessageId));
+        botApiMethodList.add(createSimpleMessage(chatId, BotMessagesEnum.WAITING_FOR_REWARD.getMessage(), true));
+    }
+
+    private void handleRewardState(Goal goal, long userId, long chatId, int replyMessageId, String messageText, List<BotApiMethod> botApiMethodList) {
+        goalService.setGoalReward(goal, messageText);
+        goalService.setGoalDeadline(goal, getEndOfWeek());
+        goalService.clearUserState(userId);
+
+        var goalMadeMessage = new SendMessage();
+        goalMadeMessage.setChatId(chatId);
+        goalMadeMessage.setText(BotMessagesEnum.SETTING_GOAL_DONE.getMessage(
+                BotMessagesEnum.GET_GOAL_DETAIL_MESSAGE_VER1.getMessage(0, "", goal.getGoal(), goal.getReward())
+        ));
+        goalMadeMessage.enableHtml(true);
+        goalMadeMessage.setReplyMarkup(TelegramBotHelper.okButton());
+        TelegramBotHelper.setMainMenuKeyboard(goalMadeMessage);
+//        botApiMethodList.add(deleteMessageFromReply(chatId, replyMessageId));
+        botApiMethodList.add(goalMadeMessage);
+    }
+
+    private void handleResultsState(long userId, long chatId, String messageText, UserGoalData data, List<BotApiMethod> botApiMethodList) {
+        userService.writeResultsForWeek(userId, messageText);
+        goalService.clearUserState(userId);
+
+        var editMessage = new EditMessageText();
+        editMessage.setText(BotMessagesEnum.MY_RESULTS.getMessage(messageText));
+        editMessage.setMessageId(Math.toIntExact(data.goalId()));
+        editMessage.setChatId(chatId);
+        editMessage.setReplyMarkup(createResultsMarkup(userId));
+        botApiMethodList.add(editMessage);
+    }
+
+    private LocalDateTime getEndOfWeek() {
+        return LocalDateTime.now().with(ChronoField.DAY_OF_WEEK, 7).withHour(23).withMinute(59);
+    }
+
+    private SendMessage createSimpleMessage(long chatId, String text) {
+        return new SendMessage(String.valueOf(chatId), text);
+    }
+
+    private SendMessage createSimpleMessage(long chatId, String text, boolean forceReply) {
+        var message = createSimpleMessage(chatId, text);
+        if (forceReply) {
+            message.setReplyMarkup(new ForceReplyKeyboard());
+        }
+        return message;
+    }
+
+    private InlineKeyboardMarkup createResultsMarkup(long userId) {
+        return Markup.keyboard().addRow(
+                        Markup.Button.create("Переписать результаты", CallbackType.PUT_RESULTS, String.valueOf(userId)),
+                        Markup.Button.create("Ok", CallbackType.DELETE_LAST_MESSAGES, "nothing")
+                ).build();
+    }
+
+    private BotApiMethod deleteMessageFromReply(long chatId, int replyMessageId) {
+        return TelegramBotHelper.deleteMessage(chatId, replyMessageId);
+    }
+
+
 
 
 }

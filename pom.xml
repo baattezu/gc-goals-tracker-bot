@@ -29,6 +29,7 @@
     <properties>
         <java.version>17</java.version>
     </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -84,6 +85,13 @@
             <artifactId>ehcache</artifactId>
             <version>3.10.2</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.github.cdimascio</groupId>
+            <artifactId>java-dotenv</artifactId>
+            <version>5.2.2</version>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -96,14 +104,61 @@
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
                 <configuration>
-                    <url>jdbc:postgresql://localhost:5438/groupgoalsbot</url>
-                    <user>postgres</user>
-                    <password>postgres</password>
+                    <url>${flyway.url}</url>
+                    <user>${flyway.user}</user>
+                    <password>${flyway.password}</password>
                     <schemas>boot</schemas>
                     <cleanDisabled>false</cleanDisabled>
                 </configuration>
             </plugin>
+            <!-- Jib plugin -->
+            <plugin>
+                <groupId>com.google.cloud.tools</groupId>
+                <artifactId>jib-maven-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <from>
+                        <image>eclipse-temurin:17-jre</image>
+                    </from>
+                    <to>
+                        <!--suppress UnresolvedMavenProperty -->
+                        <image>docker.io/${docker.username}/telegram-bot-demo</image>
+                        <auth>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <username>${docker.username}</username>
+                            <!--suppress UnresolvedMavenProperty -->
+                            <password>${docker.password}</password>
+                        </auth>
+                    </to>
+                </configuration>
+            </plugin>
+
+
+            <!-- Maven resources plugin -->
+
+
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>env-dev</id>
+            <properties>
+                <flyway.url>jdbc:postgresql://localhost:5438/groupgoalsbot</flyway.url>
+                <flyway.user>postgres</flyway.user>
+                <flyway.password>postgres</flyway.password>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
 
+        <profile>
+            <id>env-prod</id>
+            <properties>
+                <flyway.url>jdbc:postgresql://db-for-bot:5432/groupgoalsbot</flyway.url>
+                <flyway.user>postgres</flyway.user>
+                <flyway.password>postgres</flyway.password>
+            </properties>
+        </profile>
+    </profiles>
 </project>

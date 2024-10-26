@@ -11,6 +11,7 @@ import org.baattezu.telegrambotdemo.utils.TelegramBotHelper;
 import org.baattezu.telegrambotdemo.utils.keyboard.Markup;
 import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
 @Component
@@ -22,17 +23,21 @@ public class PinToChatCommand implements Command {
 
     @Override
     public SendMessage execute(Update update) {
-        var chatId = update.getMessage().getChatId();
-        var user = userService.findById(update.getMessage().getFrom().getId());
+        Message message = update.getMessage();
+        var chatId = message.getChatId();
+        if (!message.isGroupMessage()){
+            return null;
+        }
+
+        var user = userService.findById(message.getFrom().getId());
         if (user == null){
             return null;
         }
+
         var chat = chatService.findById(chatId);
         userService.pinToChat(user, chat);
-        var message = new SendMessage(String.valueOf(chatId), BotMessagesEnum.PINNED_SUCCESS_MESSAGE.getMessage(user.getUsername()));
-        message.setReplyMarkup(Markup.keyboard().addRow(
-                Markup.Button.create("Ok", CallbackType.DELETE_LAST_MESSAGES, "nothing")
-        ).build());
-        return message;
+        var sendMessage = new SendMessage(String.valueOf(chatId), BotMessagesEnum.PINNED_SUCCESS_MESSAGE.getMessage(user.getUsername()));
+        sendMessage.setReplyMarkup(TelegramBotHelper.okButton());
+        return sendMessage;
     }
 }

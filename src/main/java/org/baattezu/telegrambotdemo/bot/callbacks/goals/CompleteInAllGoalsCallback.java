@@ -41,7 +41,7 @@ public class CompleteInAllGoalsCallback implements CallbackHandler {
         var user = userService.findById(userId);
         goalService.changeGoalCompletion(completedGoal);
         // Формируем новый текст сообщения
-        var myGoals = goalService.getAllGoals(user.getId(), false);
+        var myGoals = goalService.getAllGoals(user.getId());
 
         var response = new StringBuilder(
                 BotMessagesEnum.MY_GOALS_ON_THIS_WEEK.getMessage());

@@ -30,12 +30,10 @@ public class ViewResultsCallback implements CallbackHandler {
             log.info("не было добавлено текста");
             return null;
         }
-
-        var user = userService.findById(userId);
         var newText = new StringBuilder("\n" +
                 "Цели и результаты " + userIndex + "#:\n");
 
-        var goals = goalService.getAllGoals(userId, false);
+        var goals = goalService.getAllGoals(userId);
         var index = 1;
         for (var g : goals){
             newText.append(BotMessagesEnum.GET_GOAL_DETAIL_MESSAGE_VER1.getMessage(
